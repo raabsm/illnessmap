@@ -22,6 +22,9 @@ def address_to_lat_long(df):
 def convert(address):
     i = 0
 
+    if address is None:
+        return None
+
     while i < len(geocoders):
         try:
             location = geocoders[i](address)
