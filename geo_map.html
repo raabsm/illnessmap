@@ -1,0 +1,67 @@
+CTYPE html>
+<html>
+  <head>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 11,
+          center: new google.maps.LatLng(40.75,-74.00),
+          mapTypeId: 'roadmap'
+        });
+         map.data.loadGeoJson('/static/nyc_zip_code.geojson');
+        
+     
+    
+        map.data.setStyle(function(feature) {
+            var color = 'gray';
+            if (feature.getProperty('isColorful')) {
+                color = feature.getProperty('color');
+            }
+            return /** @type {!google.maps.Data.StyleOptions} */({
+                fillColor: color,
+                strokeColor: color,
+                strokeWeight: 2
+            });
+        });
+
+    // When the user clicks, set 'isColorful', changing the color of the letters.
+        map.data.addListener('click', function(event) {
+            event.feature.setProperty('isColorful', true);
+        });
+
+    // When the user hovers, tempt them to click by outlining the letters.
+    // Call revertStyle() to remove all overrides. This will use the style rules
+    // defined in the function passed to setStyle()
+        map.data.addListener('mouseover', function(event) {
+            map.data.revertStyle();
+            map.data.overrideStyle(event.feature, {strokeWeight: 8});
+        });
+
+        map.data.addListener('mouseout', function(event) {
+            map.data.revertStyle();
+        })
+    }
+    </script>
+    <script async defer
+         src="https://maps.googleapis.com/maps/api/js?key={{ API_KEY }}&callback=initMap">
+    </script>
+  </body>
+</html>
+
