@@ -1,4 +1,4 @@
-CTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <style>
@@ -25,10 +25,11 @@ CTYPE html>
           center: new google.maps.LatLng(40.75,-74.00),
           mapTypeId: 'roadmap'
         });
-         map.data.loadGeoJson('/static/nyc_zip_code.geojson');
-        
+        map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
      
-    
+        map.data.addListener('mouseover', mouseInToRegion);
+        map.data.addListener('mouseout', mouseOutOfRegion);
+
         map.data.setStyle(function(feature) {
             var color = 'gray';
             if (feature.getProperty('isColorful')) {
@@ -49,15 +50,17 @@ CTYPE html>
     // When the user hovers, tempt them to click by outlining the letters.
     // Call revertStyle() to remove all overrides. This will use the style rules
     // defined in the function passed to setStyle()
-        map.data.addListener('mouseover', function(event) {
-            map.data.revertStyle();
-            map.data.overrideStyle(event.feature, {strokeWeight: 8});
-        });
-
-        map.data.addListener('mouseout', function(event) {
-            map.data.revertStyle();
-        })
     }
+        
+    function mouseInToRegion(event) {
+        map.data.revertStyle();
+        map.data.overrideStyle(event.feature, {strokeWeight: 8});
+    }
+
+    function mouseOutOfRegion(event) {
+        map.data.revertStyle();
+    }
+    
     </script>
     <script async defer
          src="https://maps.googleapis.com/maps/api/js?key={{ API_KEY }}&callback=initMap">
