@@ -125,11 +125,21 @@
                    },
                    position: latlng,
                    title: business['business_name'],
+				   sick_score: aboveThreshold,
                    zIndex: 999
                })
-            })  
-        })
-    }
+
+			   google.maps.event.addListener(marker, 'mouseover', function() {
+		  			document.getElementById('data-label').textContent = this.title;
+					document.getElementById('data-value').textContent = this.sick_score;
+				});
+
+    		   google.maps.event.addListener(marker, 'mouseout', function() {
+					
+			   });  
+        	})
+    	})
+	}
 
     function loadGeoJson() {
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
