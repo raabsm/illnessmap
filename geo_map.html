@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
@@ -19,37 +20,71 @@
     <div id="map"></div>
     <script>
       var map;
+      var sickMin = Number.MAX_VALUE, sickMax = -Number.MAX_VALUE;
+
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
           zoom: 11,
           center: new google.maps.LatLng(40.75,-74.00),
           mapTypeId: 'roadmap'
         });
-        map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
-     
+        loadGeoJson();
+
+        map.data.setStyle(styleFeature);
         map.data.addListener('mouseover', mouseInToRegion);
         map.data.addListener('mouseout', mouseOutOfRegion);
-
-        map.data.setStyle(function(feature) {
-            var color = 'gray';
-            if (feature.getProperty('isColorful')) {
-                color = feature.getProperty('color');
-            }
-            return /** @type {!google.maps.Data.StyleOptions} */({
-                fillColor: color,
-                strokeColor: color,
-                strokeWeight: 2
-            });
-        });
-
+        
+//        loadSickData();
     // When the user clicks, set 'isColorful', changing the color of the letters.
         map.data.addListener('click', function(event) {
             event.feature.setProperty('isColorful', true);
         });
+    }
 
-    // When the user hovers, tempt them to click by outlining the letters.
-    // Call revertStyle() to remove all overrides. This will use the style rules
-    // defined in the function passed to setStyle()
+    function loadSickData(){
+        $.getJSON("/static/zip_sick.json", function(data){
+            var sick_scores = data['sick'];
+            for(var postalcode in sick_scores){
+                var sickScore = sick_scores[postalcode];
+                
+                if(sickScore > sickMax){
+                    sickMax = sickScore;
+                }
+                if(sickScore < sickMin){
+                    sickMin = sickScore;
+                }
+                var feature = map.data.getFeatureById(postalcode);
+                if(feature === undefined){
+                    console.log("undefined");
+                }
+                else{
+                    feature.setProperty('sick_score', sickScore);
+                }
+            }
+        })
+    }
+    
+    function loadGeoJson() {
+        map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
+        google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
+            loadSickData();
+        });
+    }
+
+
+    function styleFeature(feature) {
+        var normalizedFillOpacity = (feature.getProperty('sick_score') - sickMin) /
+            (sickMax-sickMin);
+        
+       // normalizedFillOpacity = 1 - normalizedFillOpacity;
+        
+        return {
+            strokeWeight: 2,
+            strokeColor: '#fff',
+            fillColor: 'red',
+            fillOpacity: normalizedFillOpacity
+        }
+    
     }
         
     function mouseInToRegion(event) {
