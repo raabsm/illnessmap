@@ -5,7 +5,20 @@
     <style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
-      #map {
+      .nicebox {
+		position: absolute;
+		text-align: center;
+		font-family: "Roboto", "Arial", sans-serif;
+		font-size: 13px;
+		z-index: 5;
+		box-shadow: 0 4px 6px -4px #333;
+		padding: 5px 10px;
+		background: rgb(255,255,255);
+		background: linear-gradient(to bottom,rgba(255,255,255,1) 0%,rgba(245,245,245,1) 100%);
+		border: rgb(229, 229, 229) 1px solid;
+	  }
+
+	  #map {
         height: 100%;
       }
       /* Optional: Makes the sample page fill the window. */
@@ -14,9 +27,24 @@
         margin: 0;
         padding: 0;
       }
+	  #data-box {
+        top: 10px;
+        left: 500px;
+        height: 45px;
+        line-height: 45px;
+        display: none;
+      }	
+
+	  #data-value { font-size: 2.0em; font-weight: bold }
+	  #data-label { font-size: 2.0em; font-weight: normal; padding-right: 10px; }
+	  #data-label:after { content: ':' }
     </style>
   </head>
   <body>
+   <div id="data-box" class="nicebox">
+      <label id="data-label" for="data-value"></label>
+      <span id="data-value"></span>
+    </div>   
     <div id="map"></div>
     <script>
       var map;
@@ -90,7 +118,15 @@
     function mouseInToRegion(event) {
         map.data.revertStyle();
         map.data.overrideStyle(event.feature, {strokeWeight: 8});
-    }
+		document.getElementById('data-label').textContent =
+            event.feature.getProperty('postalcode');
+		
+		var sickScoreString = event.feature.getProperty('sick_score');
+		
+		document.getElementById('data-value').textContent = sickScoreString;
+		document.getElementById('data-box').style.display = 'block';
+
+	}
 
     function mouseOutOfRegion(event) {
         map.data.revertStyle();
