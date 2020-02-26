@@ -49,6 +49,7 @@
     <script>
       var map;
       var sickMin = Number.MAX_VALUE, sickMax = -Number.MAX_VALUE;
+      var sickRestaurantThreshold = 0.2;
 
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
@@ -83,7 +84,7 @@
                 }
                 var feature = map.data.getFeatureById(postalcode);
                 if(feature === undefined){
-                    console.log("undefined");
+                   // console.log("undefined");
                 }
                 else{
                     feature.setProperty('sick_score', sickScore);
@@ -92,10 +93,47 @@
         })
     }
     
+    function loadRestaurants(){
+        $.getJSON("/static/business_to_review.json", function(businesses){
+            businesses.forEach(function (business){    
+               var latlng = new google.maps.LatLng(business['lat-long'][0], 
+                       business['lat-long'][1]);
+               
+               var aboveThreshold = 0;
+               for(var i = 0; i<business['reviews'].length; i++){
+                   if (business['reviews'][i]['classification'] < sickRestaurantThreshold){
+                       continue;
+                   }
+                   else{
+                       aboveThreshold = aboveThreshold + 1;
+                   }
+               }
+               if(aboveThreshold < 10)
+                   return;
+
+               var marker = new google.maps.Marker({
+                   map: map,
+                   icon: {
+                       path: google.maps.SymbolPath.CIRCLE,
+                       scale: aboveThreshold/3,
+                       fillColor: 'blue',
+                       fillOpacity: 0.3,
+                       strokeWeight: 1,
+                       strokeColor:'grey'
+                   },
+                   position: latlng,
+                   title: business['business_name'],
+                   zIndex: 999
+               })
+            })  
+        })
+    }
+
     function loadGeoJson() {
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
         google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
             loadSickData();
+            loadRestaurants();
         });
     }
 
