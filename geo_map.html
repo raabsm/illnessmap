@@ -2,7 +2,11 @@
 <html>
   <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <style>
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+     <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+              rel = "stylesheet">
+	<style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
       .nicebox {
@@ -17,8 +21,25 @@
 		background: linear-gradient(to bottom,rgba(255,255,255,1) 0%,rgba(245,245,245,1) 100%);
 		border: rgb(229, 229, 229) 1px solid;
 	  }
-
-	  #map {
+	  .ui-slider-handle {
+		color: black;
+		font-size: 10px;
+	/*	padding: 3px;*/
+		text-shadow: 0 1px 0 #FFFFFF;
+		text-decoration:none;
+        text-align:center;
+		}
+      
+      .ui-slider-horizontal {
+          height: 8px;
+          width: 200px;
+          top: 50%;
+          left: 5%;
+          z-index: 999;
+      }
+      .ui-widget-content { background: purple; }
+      .ui-widget-content .ui-state-default { background: red; }
+  #map {
         height: 100%;
       }
       /* Optional: Makes the sample page fill the window. */
@@ -44,7 +65,13 @@
    <div id="data-box" class="nicebox">
       <label id="data-label" for="data-value"></label>
       <span id="data-value"></span>
-    </div>   
+    </div>
+   
+    <div id = "slider"></div>
+    <label for = "slidevalue">Slide:</label>
+    <input type = "text" id = "slidevalue" 
+    style = "border:0; color:#b9cd6d; font-weight:bold;">
+    
     <div id="map"></div>
     <script>
       var map;
@@ -52,6 +79,8 @@
       var sickReviewThreshold = 0.2;
       var sickRestaurantThreshold = 10;
       var scalingFactor = 3;
+        
+      var markers = [];
 
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
@@ -69,8 +98,33 @@
     // When the user clicks, set 'isColorful', changing the color of the letters.
         map.data.addListener('click', function(event) {
             event.feature.setProperty('isColorful', true);
+            for(var i = 0; i<markers.length; i++){
+               // console.log(markers[i].sick_score);
+                if(markers[i].sick_score < 100){
+                    //markers[i].visible = false;
+                    markers[i].setMap(null);
+                }
+            }
+            markers = [];
+            sickRestaurantThreshold = sickRestaurantThreshold + 1;
+            loadRestaurants();
         });
     }
+
+    $(function (){
+        $("#slider").slider({
+            min: 0.1,
+            max: 0.9,
+            step: 0.1,
+            value: 0.2,
+            slide: function(event, ui){
+                 $(this).find(".ui-slider-handle").text(ui.value);
+            },
+            create: function(event, ui){
+                 $(this).find(".ui-slider-handle").text($( this ).slider( "value" ));
+            }
+		})
+    })
 
     function loadSickData(){
         $.getJSON("/static/zip_sick.json", function(data){
@@ -110,8 +164,9 @@
                        aboveThreshold = aboveThreshold + 1;
                    }
                }
-               if(aboveThreshold < sickRestaurantThreshold)
-                   return;
+               if(aboveThreshold < sickRestaurantThreshold){
+                 return;
+               }
 
                var marker = new google.maps.Marker({
                    map: map,
@@ -135,9 +190,9 @@
 				});
 
     		   google.maps.event.addListener(marker, 'mouseout', function() {
-					
 			   });  
-        	})
+        	   markers.push(marker);
+            })
     	})
 	}
 
