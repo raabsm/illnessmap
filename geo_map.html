@@ -94,21 +94,14 @@
         map.data.addListener('mouseover', mouseInToRegion);
         map.data.addListener('mouseout', mouseOutOfRegion);
         
-//        loadSickData();
-    // When the user clicks, set 'isColorful', changing the color of the letters.
-        map.data.addListener('click', function(event) {
-            event.feature.setProperty('isColorful', true);
-            for(var i = 0; i<markers.length; i++){
-               // console.log(markers[i].sick_score);
-                if(markers[i].sick_score < 100){
-                    //markers[i].visible = false;
-                    markers[i].setMap(null);
-                }
-            }
-            markers = [];
-            sickRestaurantThreshold = sickRestaurantThreshold + 1;
-            loadRestaurants();
-        });
+    }
+
+    function changeMap(){
+        for(var i = 0; i<markers.length; i++){
+            markers[i].setMap(null);
+        }
+        markers = [];
+        loadRestaurants();
     }
 
     $(function (){
@@ -122,6 +115,10 @@
             },
             create: function(event, ui){
                  $(this).find(".ui-slider-handle").text($( this ).slider( "value" ));
+            },
+            stop: function(event, ui){
+                sickReviewThreshold = ui.value;
+                changeMap();
             }
 		})
     })
