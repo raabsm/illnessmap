@@ -76,8 +76,8 @@
     <script>
       var map;
       var sickMin = Number.MAX_VALUE, sickMax = -Number.MAX_VALUE;
-      var sickReviewThreshold = 0.2;
-      var sickRestaurantThreshold = 10;
+      var sickReviewThreshold = 0.5;
+      var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
         
       var markers = [];
@@ -109,7 +109,7 @@
             min: 0.1,
             max: 0.9,
             step: 0.1,
-            value: 0.2,
+            value: sickReviewThreshold,
             slide: function(event, ui){
                  $(this).find(".ui-slider-handle").text(ui.value);
             },
@@ -123,7 +123,7 @@
 		})
     })
 
-    function loadSickData(){
+/*    function loadSickData(){
         $.getJSON("/static/zip_sick.json", function(data){
             var sick_scores = data['sick'];
             for(var postalcode in sick_scores){
@@ -145,58 +145,83 @@
             }
         })
     }
-    
+  */  
     function loadRestaurants(){
-        $.getJSON("/static/business_to_review.json", function(businesses){
-            businesses.forEach(function (business){    
-               var latlng = new google.maps.LatLng(business['lat-long'][0], 
-                       business['lat-long'][1]);
-               
-               var aboveThreshold = 0;
-               for(var i = 0; i<business['reviews'].length; i++){
-                   if (business['reviews'][i]['classification'] < sickReviewThreshold){
-                       continue;
+        $.getJSON("/static/test.json", function(zip_codes){
+            
+            sickMin = Number.MAX_VALUE;
+            sickMax = -Number.MAX_VALUE;
+            for(var zip in zip_codes){
+                businesses = zip_codes[zip]['restaurants'];
+                var zip_sick_count = 0;
+
+                businesses.forEach(function (business){    
+                   var latlng = new google.maps.LatLng(business['lat-long'][0], 
+                           business['lat-long'][1]);
+                   
+                   var aboveThreshold = 0;
+                   for(var i = 0; i<business['reviews'].length; i++){
+                       if (business['reviews'][i]['classification'] < sickReviewThreshold){
+                           continue;
+                       }
+                       else{
+                           aboveThreshold += 1;
+                       }
                    }
-                   else{
-                       aboveThreshold = aboveThreshold + 1;
+
+                   zip_sick_count += aboveThreshold;
+                   if(aboveThreshold < sickRestaurantThreshold){
+                     return;
                    }
-               }
-               if(aboveThreshold < sickRestaurantThreshold){
-                 return;
-               }
 
-               var marker = new google.maps.Marker({
-                   map: map,
-                   icon: {
-                       path: google.maps.SymbolPath.CIRCLE,
-                       scale: aboveThreshold/scalingFactor,
-                       fillColor: 'blue',
-                       fillOpacity: 0.3,
-                       strokeWeight: 1,
-                       strokeColor:'grey'
-                   },
-                   position: latlng,
-                   title: business['business_name'],
-				   sick_score: aboveThreshold,
-                   zIndex: 999
-               })
+                   var marker = new google.maps.Marker({
+                       map: map,
+                       icon: {
+                           path: google.maps.SymbolPath.CIRCLE,
+                           scale: aboveThreshold/scalingFactor,
+                           fillColor: 'blue',
+                           fillOpacity: 0.3,
+                           strokeWeight: 1,
+                           strokeColor:'grey'
+                       },
+                       position: latlng,
+                       title: business['business_name'],
+                       sick_score: aboveThreshold,
+                       zIndex: 999
+                   })
 
-			   google.maps.event.addListener(marker, 'mouseover', function() {
-		  			document.getElementById('data-label').textContent = this.title;
-					document.getElementById('data-value').textContent = this.sick_score;
-				});
+                   google.maps.event.addListener(marker, 'mouseover', function() {
+                        document.getElementById('data-label').textContent = this.title;
+                        document.getElementById('data-value').textContent = this.sick_score;
+                    });
 
-    		   google.maps.event.addListener(marker, 'mouseout', function() {
-			   });  
-        	   markers.push(marker);
-            })
+                   google.maps.event.addListener(marker, 'mouseout', function() {
+                   });  
+                   markers.push(marker);
+                })
+
+                if(zip_sick_count > sickMax){
+                    sickMax = zip_sick_count;
+                }
+                if(zip_sick_count < sickMin){
+                    sickMin = zip_sick_count;
+                }
+                var feature = map.data.getFeatureById(zip);
+                if(feature === undefined){
+                   // console.log("undefined");
+                }
+                else{
+                    feature.setProperty('sick_score', zip_sick_count);
+                }
+            }
+
     	})
 	}
 
     function loadGeoJson() {
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
         google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
-            loadSickData();
+    //        loadSickData();
             loadRestaurants();
         });
     }
@@ -205,7 +230,7 @@
     function styleFeature(feature) {
         var normalizedFillOpacity = (feature.getProperty('sick_score') - sickMin) /
             (sickMax-sickMin);
-        
+        console.log(sickMax);
        // normalizedFillOpacity = 1 - normalizedFillOpacity;
         
         return {
