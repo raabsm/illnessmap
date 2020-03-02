@@ -79,7 +79,8 @@
       var sickReviewThreshold = 0.5;
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
-        
+      
+      var zipFeature = {'feature': null, 'over': false};
       var markers = [];
 
       function initMap() {
@@ -196,6 +197,15 @@
                     });
 
                    google.maps.event.addListener(marker, 'mouseout', function() {
+                       if(zipFeature['over']){
+                           var feature = zipFeature['feature'];
+                           document.getElementById('data-label').textContent = 
+                               feature.getProperty('postalcode');
+                           var sickScoreString = feature.getProperty('sick_score');
+                            
+                            document.getElementById('data-value').textContent = sickScoreString;
+                            document.getElementById('data-box').style.display = 'block';
+                       }
                    });  
                    markers.push(marker);
                 })
@@ -230,22 +240,28 @@
     function styleFeature(feature) {
         var normalizedFillOpacity = (feature.getProperty('sick_score') - sickMin) /
             (sickMax-sickMin);
-        console.log(sickMax);
        // normalizedFillOpacity = 1 - normalizedFillOpacity;
         
+        var outlineWeight = 0.5, zIndex = 1;
+            if (feature.getProperty('state') === 'hover') {
+                outlineWeight = zIndex = 2;
+            }
+
         return {
-            strokeWeight: 2,
+            strokeWeight: outlineWeight,
             strokeColor: '#fff',
             fillColor: 'red',
-            fillOpacity: normalizedFillOpacity
+            fillOpacity: normalizedFillOpacity,
+            zIndex: zIndex
         }
     
     }
         
     function mouseInToRegion(event) {
-        map.data.revertStyle();
-        map.data.overrideStyle(event.feature, {strokeWeight: 8});
-		document.getElementById('data-label').textContent =
+		event.feature.setProperty('state', 'hover');
+        zipFeature['feature'] = event.feature;
+        zipFeature['over'] = true;
+        document.getElementById('data-label').textContent =
             event.feature.getProperty('postalcode');
 		
 		var sickScoreString = event.feature.getProperty('sick_score');
@@ -256,7 +272,8 @@
 	}
 
     function mouseOutOfRegion(event) {
-        map.data.revertStyle();
+        event.feature.setProperty('state', 'normal');
+        zipFeature['over'] = false;
     }
     
     </script>
