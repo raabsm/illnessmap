@@ -24,12 +24,12 @@
 	  .ui-slider-handle {
 		color: black;
 		font-size: 10px;
-	/*	padding: 3px;*/
+		padding: 3px;
 		text-shadow: 0 1px 0 #FFFFFF;
 		text-decoration:none;
         text-align:center;
 		}
-      
+
       .ui-slider-horizontal {
           height: 8px;
           width: 200px;
@@ -39,6 +39,7 @@
       }
       .ui-widget-content { background: purple; }
       .ui-widget-content .ui-state-default { background: red; }
+
   #map {
         height: 100%;
       }
@@ -58,7 +59,7 @@
 
 	  #data-value { font-size: 2.0em; font-weight: bold }
 	  #data-label { font-size: 2.0em; font-weight: normal; padding-right: 10px; }
-	  #data-label:after { content: ':' }
+	  /*#data-label:after { content: ':' }*/
     </style>
   </head>
   <body>
@@ -66,22 +67,36 @@
       <label id="data-label" for="data-value"></label>
       <span id="data-value"></span>
     </div>
-   
-    <div id = "slider"></div>
-    <label for = "slidevalue">Slide:</label>
-    <input type = "text" id = "slidevalue" 
-    style = "border:0; color:#b9cd6d; font-weight:bold;">
-    
+    <div id = "sick-review-slider"></div>
+   <p></p>
+    <div id = "date-slider"></div>
+    <div id= "sick-rest-slider"></div>>
+
+    <div class="slider-text-boxes">
+		<label for = "sick-slider-text">Sick Review Threshold:</label>
+		<input type="text" id="sick-slider-text">
+
+		<label for = "date-slider-text">Date:</label>
+		<input type="text" id="date-slider-text">
+
+		<label for = "rest-slider-text">Sick Restaurant Threshold</label>
+		<input type="text" id="rest-slider-text">
+	</div>
+
     <div id="map"></div>
     <script>
       var map;
       var sickMin = Number.MAX_VALUE, sickMax = -Number.MAX_VALUE;
-      var sickReviewThreshold = 0.5;
+      var sickReviewBottomThreshold = 0.5;
+      var sickReviewTopThreshold = 0.8;
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
       
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
+
+      var startTime = (new Date(2005, 8, 2)).getTime();
+      var endTime = (new Date(2020, 2, 3)).getTime();
 
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
@@ -106,47 +121,50 @@
     }
 
     $(function (){
-        $("#slider").slider({
+        $("#sick-review-slider").slider({
+            range: true,
             min: 0.1,
             max: 0.9,
             step: 0.1,
-            value: sickReviewThreshold,
+            values: [sickReviewBottomThreshold, sickReviewTopThreshold],
             slide: function(event, ui){
-                 $(this).find(".ui-slider-handle").text(ui.value);
-            },
-            create: function(event, ui){
-                 $(this).find(".ui-slider-handle").text($( this ).slider( "value" ));
+                 $("#sick-slider-text").val(ui.values[0] + " - " + ui.values[1]);
             },
             stop: function(event, ui){
-                sickReviewThreshold = ui.value;
+                sickReviewBottomThreshold = ui.values[0];
+                sickReviewTopThreshold = ui.values[1];
+                changeMap();
+            }
+		})
+        $("#date-slider").slider({
+            range: true,
+            min: startTime / 1000,
+            max: endTime / 1000,
+            step: 604800,
+            values: [new Date(2012, 1, 1).getTime() / 1000, new Date(2016, 01, 01).getTime() / 1000],
+            slide: function( event, ui ) {
+                 $( "#date-slider-text" ).val( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
+             },
+            stop: function(event, ui){
+                startTime = ui.values[0] * 1000;
+                endTime = ui.values[1] * 1000;
                 changeMap();
             }
 		})
     })
 
-/*    function loadSickData(){
-        $.getJSON("/static/zip_sick.json", function(data){
-            var sick_scores = data['sick'];
-            for(var postalcode in sick_scores){
-                var sickScore = sick_scores[postalcode];
-                
-                if(sickScore > sickMax){
-                    sickMax = sickScore;
-                }
-                if(sickScore < sickMin){
-                    sickMin = sickScore;
-                }
-                var feature = map.data.getFeatureById(postalcode);
-                if(feature === undefined){
-                   // console.log("undefined");
-                }
-                else{
-                    feature.setProperty('sick_score', sickScore);
-                }
-            }
-        })
-    }
-  */  
+      function getFormattedDate(date) {
+          var year = date.getFullYear();
+
+          var month = (1 + date.getMonth()).toString();
+          month = month.length > 1 ? month : '0' + month;
+
+          var day = date.getDate().toString();
+          day = day.length > 1 ? day : '0' + day;
+
+          return month + '/' + day + '/' + year;
+      }
+
     function loadRestaurants(){
         $.getJSON("/static/test.json", function(zip_codes){
             
@@ -162,7 +180,14 @@
                    
                    var aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++){
-                       if (business['reviews'][i]['classification'] < sickReviewThreshold){
+                       var reviewScore = business['reviews'][i]['classification'];
+                       var reviewTime = Date.parse(business['reviews'][i]['review_date']);
+
+                       if (reviewScore < sickReviewBottomThreshold ||
+                           reviewScore > sickReviewTopThreshold ||
+                           reviewTime < startTime ||
+                           reviewTime > endTime){
+
                            continue;
                        }
                        else{
