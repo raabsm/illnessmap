@@ -29,7 +29,13 @@
 		text-decoration:none;
         text-align:center;
 		}
-
+      .slider-text-boxes {
+          position: absolute;
+          background: rgba(0,0,0,0.54);
+          top: 30%;
+          left: 2%;
+          z-index: 900;
+      }
       .ui-slider-horizontal {
           height: 8px;
           width: 200px;
@@ -59,7 +65,7 @@
 
 	  #data-value { font-size: 2.0em; font-weight: bold }
 	  #data-label { font-size: 2.0em; font-weight: normal; padding-right: 10px; }
-	  /*#data-label:after { content: ':' }*/
+	  #data-label:after { content: ':' }
     </style>
   </head>
   <body>
@@ -67,17 +73,19 @@
       <label id="data-label" for="data-value"></label>
       <span id="data-value"></span>
     </div>
-    <div id = "sick-review-slider"></div>
-   <p></p>
-    <div id = "date-slider"></div>
-    <div id= "sick-rest-slider"></div>>
+    <div id= "sick-rest-slider"></div>
 
     <div class="slider-text-boxes">
-		<label for = "sick-slider-text">Sick Review Threshold:</label>
-		<input type="text" id="sick-slider-text">
-
-		<label for = "date-slider-text">Date:</label>
-		<input type="text" id="date-slider-text">
+		<p>
+            <label for = "sick-slider-text">Sick Review Threshold:</label>
+            <input type="text" id="sick-slider-text">
+            <div id = "sick-review-slider"></div>
+        </p>
+        <p>
+            <label for = "date-slider-text">Date:</label>
+            <input type="text" id="date-slider-text">
+            <div id = "date-slider"></div>
+        </p>
 
 		<label for = "rest-slider-text">Sick Restaurant Threshold</label>
 		<input type="text" id="rest-slider-text">
