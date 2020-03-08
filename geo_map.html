@@ -46,6 +46,8 @@
       .ui-widget-content { background: purple; }
       .ui-widget-content .ui-state-default { background: red; }
 
+
+
   #map {
         height: 100%;
       }
@@ -145,12 +147,16 @@
                 changeMap();
             }
 		})
+
+        var sliderStartTime = new Date(2012, 1, 1).getTime() / 1000;
+        var sliderStopTime =  new Date(2016, 01, 01).getTime() / 1000;
+
         $("#date-slider").slider({
             range: true,
             min: startTime / 1000,
             max: endTime / 1000,
             step: 604800,
-            values: [new Date(2012, 1, 1).getTime() / 1000, new Date(2016, 01, 01).getTime() / 1000],
+            values: [sliderStartTime, sliderStopTime],
             slide: function( event, ui ) {
                  $( "#date-slider-text" ).val( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
              },
@@ -160,6 +166,7 @@
                 changeMap();
             }
 		})
+
          $("#sick-rest-slider").slider({
             min: 1,
             max: 10,
@@ -173,6 +180,10 @@
                 changeMap();
             }
 		})
+
+        $("#sick-slider-text").val(sickReviewBottomThreshold + " - " + sickReviewTopThreshold)
+        $("#date-slider-text").val(getFormattedDate(new Date(sliderStartTime *1000)) + " - " + getFormattedDate(new Date(sliderStopTime*1000)));
+        $("#rest-slider-text").val(sickRestaurantThreshold);
     })
 
       function getFormattedDate(date) {
@@ -239,19 +250,22 @@
                    })
 
                    google.maps.event.addListener(marker, 'mouseover', function() {
-                        document.getElementById('data-label').textContent = this.title;
-                        document.getElementById('data-value').textContent = this.sick_score;
+                        update_mouseover_box(this.title, this.sick_score);
+
+                        var icon = this.icon;
+                        icon.scale = icon.scale + 3;
+                        this.setIcon(icon);
                     });
 
                    google.maps.event.addListener(marker, 'mouseout', function() {
                        if(zipFeature['over']){
                            var feature = zipFeature['feature'];
-                           document.getElementById('data-label').textContent = 
-                               feature.getProperty('postalcode');
                            var sickScoreString = feature.getProperty('sick_score');
-                            
-                            document.getElementById('data-value').textContent = sickScoreString;
-                            document.getElementById('data-box').style.display = 'block';
+                           update_mouseover_box(feature.getProperty('postalcode'), sickScoreString);
+
+                           var icon = this.icon;
+                           icon.scale = icon.scale - 3;
+                           this.setIcon(icon);
                        }
                    });  
                    markers.push(marker);
@@ -303,19 +317,20 @@
         }
     
     }
+
+    function update_mouseover_box(dataLabel, dataValue) {
+          document.getElementById('data-label').textContent = dataLabel;
+          document.getElementById('data-value').textContent = dataValue;
+          document.getElementById('data-box').style.display = 'block';
+    }
         
     function mouseInToRegion(event) {
 		event.feature.setProperty('state', 'hover');
         zipFeature['feature'] = event.feature;
         zipFeature['over'] = true;
-        document.getElementById('data-label').textContent =
-            event.feature.getProperty('postalcode');
 		
 		var sickScoreString = event.feature.getProperty('sick_score');
-		
-		document.getElementById('data-value').textContent = sickScoreString;
-		document.getElementById('data-box').style.display = 'block';
-
+		update_mouseover_box(event.feature.getProperty('postalcode'), sickScoreString);
 	}
 
     function mouseOutOfRegion(event) {
