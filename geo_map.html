@@ -29,18 +29,16 @@
 		text-decoration:none;
         text-align:center;
 		}
-      .slider-text-boxes {
+      .text-box {
           position: absolute;
-          background: rgba(0,0,0,0.54);
-          top: 30%;
-          left: 2%;
+          padding: 10px;
+          background: rgba(0, 0, 0, 0.83);
           z-index: 900;
+          color: #eaf2ff;
       }
       .ui-slider-horizontal {
           height: 8px;
           width: 200px;
-          top: 50%;
-          left: 5%;
           z-index: 999;
       }
       .ui-widget-content { background: purple; }
@@ -68,6 +66,36 @@
 	  #data-value { font-size: 2.0em; font-weight: bold }
 	  #data-label { font-size: 2.0em; font-weight: normal; padding-right: 10px; }
 	  #data-label:after { content: ':' }
+
+        #slider-box{
+            top: 50px;
+            left: 10px;
+
+        }
+        #rest-info-box{
+            top: 50px;
+            width: 250px;
+            right: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        #rest-title{
+            font-weight: 400;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 25px;
+            color: navajowhite;
+        }
+        .rest-info{
+            line-height: 28px;
+            text-align: left;
+        }
+        .review-text{
+            text-align: left;
+            height: 150px;
+            overflow: auto;
+        }
+
     </style>
   </head>
   <body>
@@ -76,7 +104,7 @@
       <span id="data-value"></span>
     </div>
 
-    <div class="slider-text-boxes">
+    <div id=slider-box class="text-box">
 		<p>
             <label for = "sick-slider-text">Sick Review Threshold:</label>
             <input type="text" id="sick-slider-text">
@@ -92,7 +120,20 @@
             <input type="text" id="rest-slider-text">
             <div id= "sick-rest-slider"></div>
         </p>
+
+        <button onclick="scaleUp()">Scale Up</button>
+
 	</div>
+
+   <div id="rest-info-box" class="text-box">
+       <a href="#" target = "_blank" id="rest-title" style="text-align: center;"></a>
+       <div id="address" class="rest-info"></div>
+       <div id="rating" class="rest-info"></div>
+       <a href="#" target = "_blank" id="max-review-title" class="rest-info" style="color:navajowhite"></a>
+       <div id="max-review" class="review-text"></div>
+       <a href="#" target = "_blank" id="recent-review-title" class="rest-info" style="color:navajowhite"></a>
+       <div id="recent-review" class="review-text"></div>
+   </div>
 
     <div id="map"></div>
     <script>
@@ -210,7 +251,12 @@
                 businesses.forEach(function (business){    
                    var latlng = new google.maps.LatLng(business['lat-long'][0], 
                            business['lat-long'][1]);
-                   
+
+                   var max_review = null;
+                   var most_recent_review = null;
+                   var max_review_value = 0;
+                   var most_recent_review_value = new Date(-8640000000000000);
+
                    var aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++){
                        var reviewScore = business['reviews'][i]['classification'];
@@ -224,6 +270,14 @@
                            continue;
                        }
                        else{
+                           if(reviewScore > max_review_value){
+                               max_review = business['reviews'][i];
+                               max_review_value = reviewScore;
+                           }
+                           if(reviewTime > most_recent_review_value){
+                               most_recent_review = business['reviews'][i];
+                               most_recent_review_value = reviewTime;
+                           }
                            aboveThreshold += 1;
                        }
                    }
@@ -244,24 +298,35 @@
                            strokeColor:'grey'
                        },
                        position: latlng,
-                       title: business['business_name'],
                        sick_score: aboveThreshold,
+                       rest_info:{
+                           name: business['business_name'],
+                           address: business['address'],
+                           url: business['business_url'],
+                           rating: business['business_rating'],
+                           max_review: max_review,
+                           most_recent_review: most_recent_review
+                       },
                        zIndex: 999
                    })
 
                    google.maps.event.addListener(marker, 'mouseover', function() {
-                        update_mouseover_box(this.title, this.sick_score);
+                        updateMouseoverBox(this.rest_info.name, this.sick_score);
 
                         var icon = this.icon;
                         icon.scale = icon.scale + 3;
                         this.setIcon(icon);
                     });
 
+                    google.maps.event.addListener(marker, 'click', function() {
+                        updateClickBox(this.rest_info);
+                    });
+
                    google.maps.event.addListener(marker, 'mouseout', function() {
                        if(zipFeature['over']){
                            var feature = zipFeature['feature'];
                            var sickScoreString = feature.getProperty('sick_score');
-                           update_mouseover_box(feature.getProperty('postalcode'), sickScoreString);
+                           updateMouseoverBox(feature.getProperty('postalcode'), sickScoreString);
 
                            var icon = this.icon;
                            icon.scale = icon.scale - 3;
@@ -297,6 +362,28 @@
         });
     }
 
+    function scaleUp(){
+          for(var i =0; i < markers.length; i++){
+              var icon = markers[i].icon;
+              icon.scale += 1;
+              markers[i].setIcon(icon);
+          }
+    }
+
+    function updateClickBox(restInfo){
+          var box = document.getElementById('rest-info-box');
+          document.getElementById('rest-title').href = restInfo.url;
+          document.getElementById('rest-title').textContent = restInfo.name;
+          document.getElementById('address').textContent = restInfo.address;
+          document.getElementById('rating').textContent = "Restaurant Rating: " +  restInfo.rating;
+          document.getElementById('max-review-title').href = restInfo.max_review.review_url;
+          document.getElementById('max-review-title').textContent = 'Max Review';
+          document.getElementById('max-review').textContent = restInfo.max_review.text;
+          document.getElementById('recent-review-title').href = restInfo.most_recent_review.review_url;
+          document.getElementById('recent-review-title').textContent = 'Recent Review';
+          document.getElementById('recent-review').textContent = restInfo.most_recent_review.text;
+    }
+
 
     function styleFeature(feature) {
         var normalizedFillOpacity = (feature.getProperty('sick_score') - sickMin) /
@@ -318,7 +405,7 @@
     
     }
 
-    function update_mouseover_box(dataLabel, dataValue) {
+    function updateMouseoverBox(dataLabel, dataValue) {
           document.getElementById('data-label').textContent = dataLabel;
           document.getElementById('data-value').textContent = dataValue;
           document.getElementById('data-box').style.display = 'block';
@@ -330,7 +417,7 @@
         zipFeature['over'] = true;
 		
 		var sickScoreString = event.feature.getProperty('sick_score');
-		update_mouseover_box(event.feature.getProperty('postalcode'), sickScoreString);
+		updateMouseoverBox(event.feature.getProperty('postalcode'), sickScoreString);
 	}
 
     function mouseOutOfRegion(event) {
