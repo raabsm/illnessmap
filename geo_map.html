@@ -86,7 +86,7 @@
         }
         #rest-info-box{
             top: 50px;
-            width: 250px;
+            width: 500px;
             right: 10px;
             padding: 10px;
             text-align: center;
@@ -102,6 +102,16 @@
         .rest-info{
             line-height: 28px;
             text-align: left;
+        }
+
+        .rest-info-title{
+            display: inline-block;
+            color: white;
+        }
+        .rest-info-value{
+            float: right;
+            display: inline-block;
+            color: #eee;
         }
         .slider-title{
             line-height: 28px;
@@ -151,13 +161,28 @@
 
 
         <button onclick="scaleUp()">Scale Up</button>
+        <button onclick="deselectMarker()">Deselect</button>
 
 	</div>
 
    <div id="rest-info-box" class="text-box">
        <a href="#" target = "_blank" id="rest-title" style="text-align: center;"></a>
-       <div id="address" class="rest-info"></div>
-       <div id="rating" class="rest-info"></div>
+       <div class="rest-info">
+           <div class="rest-info-title">Address: </div>
+           <div class="rest-info-value" id="address"></div>
+       </div>
+       <div class="rest-info">
+           <div class="rest-info-title">Rating: </div>
+           <div class="rest-info-value" id="rating"></div>
+       </div>
+        <div class="rest-info">
+           <div class="rest-info-title">Sick Score: </div>
+           <div class="rest-info-value" id="sick_score"></div>
+       </div>
+       <div class="rest-info">
+           <div class="rest-info-title">Total Reviews: </div>
+           <div class="rest-info-value" id="total-reviews"></div>
+       </div>
        <a href="#" target = "_blank" id="max-review-title" class="rest-info" style="color:navajowhite"></a>
        <div id="max-review" class="review-text"></div>
        <a href="#" target = "_blank" id="recent-review-title" class="rest-info" style="color:navajowhite"></a>
@@ -172,6 +197,7 @@
       var sickReviewTopThreshold = 0.8;
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
+      var selectedMarker = null;
       
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
@@ -186,11 +212,26 @@
           mapTypeId: 'roadmap'
         });
         loadGeoJson();
+        // google.maps.event.addDomListener(document.getElementById('map'), 'dblclick', function() {
+        //     document.getElementById('rest-info-box').style.display = 'none';
+        //     if(selectedMarker != null){
+        //         makeNeutralIcon(selectedMarker, 5);
+        //         selectedMarker = null;
+        //     }
+        // });
 
         map.data.setStyle(styleFeature);
         map.data.addListener('mouseover', mouseInToRegion);
         map.data.addListener('mouseout', mouseOutOfRegion);
         
+    }
+
+    function deselectMarker(){
+          document.getElementById('rest-info-box').style.display = 'none';
+            if(selectedMarker != null){
+                makeNeutralIcon(selectedMarker, 5);
+                selectedMarker = null;
+            }
     }
 
     function changeMap(){
@@ -358,6 +399,7 @@
                        rest_info:{
                            name: business['business_name'],
                            address: business['address'],
+                           total_review_count: business['total_review_count'],
                            url: business['business_url'],
                            rating: business['business_rating'],
                            max_review: max_review,
@@ -375,7 +417,18 @@
                     });
 
                     google.maps.event.addListener(marker, 'click', function() {
-                        updateClickBox(this.rest_info);
+                        updateClickBox(this.sick_score, this.rest_info);
+                        if(selectedMarker != null){
+                            makeNeutralIcon(selectedMarker, 5);
+                        }
+
+                        var icon = this.icon;
+                        icon.scale = icon.scale + 5;
+                        icon.fillColor = 'green';
+                        icon.fillOpacity = 0.6;
+                        this.setIcon(icon);
+
+                        selectedMarker = this;
                     });
 
                    google.maps.event.addListener(marker, 'mouseout', function() {
@@ -384,9 +437,9 @@
                            var sickScoreString = feature.getProperty('sick_score');
                            updateMouseoverBox(feature.getProperty('postalcode'), sickScoreString);
 
-                           var icon = this.icon;
-                           icon.scale = icon.scale - 3;
-                           this.setIcon(icon);
+                            var icon = this.icon;
+                            icon.scale = icon.scale - 3;
+                            this.setIcon(icon);
                        }
                    });  
                    markers.push(marker);
@@ -410,6 +463,13 @@
     	})
 	}
 
+	function makeNeutralIcon(marker, scale){
+        var icon = marker.icon;
+        icon.scale = icon.scale - scale;
+        icon.fillColor = 'blue';
+        icon.fillOpacity = 0.3;
+        marker.setIcon(icon);
+    }
     function loadGeoJson() {
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
         google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
@@ -426,13 +486,15 @@
           }
     }
 
-    function updateClickBox(restInfo){
+    function updateClickBox(sickScore, restInfo){
           var box = document.getElementById('rest-info-box');
           box.style.display = 'block';
           document.getElementById('rest-title').href = restInfo.url;
           document.getElementById('rest-title').textContent = restInfo.name;
           document.getElementById('address').textContent = restInfo.address;
-          document.getElementById('rating').textContent = "Restaurant Rating: " +  restInfo.rating;
+          document.getElementById('rating').textContent = restInfo.rating;
+          document.getElementById('total-reviews').textContent = restInfo.total_review_count;
+          document.getElementById('sick_score').textContent = sickScore;
           document.getElementById('max-review-title').href = restInfo.max_review.review_url;
           document.getElementById('max-review-title').textContent = 'Max Review';
           document.getElementById('max-review').textContent = restInfo.max_review.text;
