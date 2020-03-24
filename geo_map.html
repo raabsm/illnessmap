@@ -198,6 +198,7 @@
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
       var selectedMarker = null;
+      var selectedMarkerIcon = null;
       
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
@@ -229,7 +230,7 @@
     function deselectMarker(){
           document.getElementById('rest-info-box').style.display = 'none';
             if(selectedMarker != null){
-                makeNeutralIcon(selectedMarker, 5);
+                makeNeutralIcon(selectedMarker);
                 selectedMarker = null;
             }
     }
@@ -419,16 +420,13 @@
                     google.maps.event.addListener(marker, 'click', function() {
                         updateClickBox(this.sick_score, this.rest_info);
                         if(selectedMarker != null){
-                            makeNeutralIcon(selectedMarker, 5);
+                            makeNeutralIcon(selectedMarker);
                         }
-
-                        var icon = this.icon;
-                        icon.scale = icon.scale + 5;
-                        icon.fillColor = 'green';
-                        icon.fillOpacity = 0.6;
-                        this.setIcon(icon);
-
+                        selectedMarkerIcon = this.icon;
                         selectedMarker = this;
+
+                        this.setIcon('https://www.google.com/mapfiles/marker_green.png');
+
                     });
 
                    google.maps.event.addListener(marker, 'mouseout', function() {
@@ -463,12 +461,9 @@
     	})
 	}
 
-	function makeNeutralIcon(marker, scale){
-        var icon = marker.icon;
-        icon.scale = icon.scale - scale;
-        icon.fillColor = 'blue';
-        icon.fillOpacity = 0.3;
-        marker.setIcon(icon);
+	function makeNeutralIcon(marker){
+        selectedMarkerIcon.scale -= 3;
+        marker.setIcon(selectedMarkerIcon);
     }
     function loadGeoJson() {
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
