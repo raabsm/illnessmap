@@ -338,12 +338,12 @@
       }
 
     function loadRestaurants(){
-        $.getJSON("/static/test.json", function(zip_codes){
-            
+        $.getJSON("/static/march_zipcode_sick_reviews.json", function(zip_codes){
+            console.log('hello');
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
             for(var zip in zip_codes){
-                businesses = zip_codes[zip]['restaurants'];
+                businesses = zip_codes[zip];
                 var zip_sick_count = 0;
 
                 businesses.forEach(function (business){    
@@ -357,8 +357,8 @@
 
                    var aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++){
-                       var reviewScore = business['reviews'][i]['classification'];
-                       var reviewTime = Date.parse(business['reviews'][i]['review_date']);
+                       var reviewScore = business['reviews'][i]['reg_total_score'];
+                       var reviewTime = Date.parse(business['reviews'][i]['date_created']);
 
                        if (reviewScore < sickReviewBottomThreshold ||
                            reviewScore > sickReviewTopThreshold ||
@@ -398,11 +398,11 @@
                        position: latlng,
                        sick_score: aboveThreshold,
                        rest_info:{
-                           name: business['business_name'],
+                           name: business['name'],
                            address: business['address'],
-                           total_review_count: business['total_review_count'],
-                           url: business['business_url'],
-                           rating: business['business_rating'],
+                           total_review_count: business['review_count'],
+                           url: business['url'],
+                           rating: business['rating'],
                            max_review: max_review,
                            most_recent_review: most_recent_review
                        },
@@ -458,7 +458,9 @@
                 }
             }
 
-    	})
+    	}).fail(function (jqxhr, status, error) {
+console.log('error', status, error) }
+);
 	}
 
 	function makeNeutralIcon(marker){
