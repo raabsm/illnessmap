@@ -195,8 +195,7 @@
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
       var selectedMarker = null;
-      var selectedMarkerIcon = null;
-      
+
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
 
@@ -372,16 +371,19 @@
                      return;
                    }
 
-                   var marker = new google.maps.Marker({
-                       map: map,
-                       icon: {
+                   var regular_icon = {
                            path: google.maps.SymbolPath.CIRCLE,
                            scale: aboveThreshold/scalingFactor,
                            fillColor: 'blue',
                            fillOpacity: 0.3,
                            strokeWeight: 1,
                            strokeColor:'grey'
-                       },
+                       };
+
+                   var marker = new google.maps.Marker({
+                       map: map,
+                       normal_icon: regular_icon,
+                       icon: regular_icon,
                        position: latlng,
                        sick_score: aboveThreshold,
                        reviews: reviews,
@@ -399,8 +401,8 @@
                    google.maps.event.addListener(marker, 'mouseover', function() {
                         updateMouseoverBox(this.rest_info.name, this.sick_score);
 
-                        var icon = this.icon;
-                        icon.scale = icon.scale + 3;
+                        let icon = this.icon;
+                        icon.scale = this.normal_icon.scale + 3;
                         this.setIcon(icon);
                     });
 
@@ -409,7 +411,6 @@
                         if(selectedMarker != null){
                             makeNeutralIcon(selectedMarker);
                         }
-                        selectedMarkerIcon = this.icon;
                         selectedMarker = this;
 
                         this.setIcon('https://www.google.com/mapfiles/marker_green.png');
@@ -422,9 +423,9 @@
                            var sickScoreString = feature.getProperty('sick_score');
                            updateMouseoverBox(feature.getProperty('postalcode'), sickScoreString);
 
-                            var icon = this.icon;
-                            icon.scale = icon.scale - 3;
-                            this.setIcon(icon);
+                           if(selectedMarker!== this){
+                               makeNeutralIcon(this);
+                           }
                        }
                    });  
                    markers.push(marker);
@@ -451,8 +452,7 @@
 	}
 
 	function makeNeutralIcon(marker){
-        selectedMarkerIcon.scale -= 3;
-        marker.setIcon(selectedMarkerIcon);
+        marker.setIcon(marker.normal_icon);
     }
     function loadGeoJson() {
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
@@ -464,9 +464,10 @@
 
     function scaleUp(){
           for(var i =0; i < markers.length; i++){
-              var icon = markers[i].icon;
-              icon.scale += 1;
+              var icon = markers[i].normal_icon;
+              icon.scale += 2;
               markers[i].setIcon(icon);
+              markers[i].normal_icon = icon;
           }
     }
 
