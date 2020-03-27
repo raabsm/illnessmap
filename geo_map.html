@@ -183,10 +183,7 @@
            <div class="rest-info-title">Total Reviews: </div>
            <div class="rest-info-value" id="total-reviews"></div>
        </div>
-       <a href="#" target = "_blank" id="max-review-title" class="rest-info" style="color:navajowhite"></a>
-       <div id="max-review" class="review-text"></div>
-       <a href="#" target = "_blank" id="recent-review-title" class="rest-info" style="color:navajowhite"></a>
-       <div id="recent-review" class="review-text"></div>
+       <div id="reviews"></div>
    </div>
 
     <div id="map"></div>
@@ -350,10 +347,7 @@
                    var latlng = new google.maps.LatLng(business['lat-long'][0], 
                            business['lat-long'][1]);
 
-                   var max_review = null;
-                   var most_recent_review = null;
-                   var max_review_value = 0;
-                   var most_recent_review_value = new Date(-8640000000000000);
+                   var reviews = [];
 
                    var aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++){
@@ -368,14 +362,7 @@
                            continue;
                        }
                        else{
-                           if(reviewScore > max_review_value){
-                               max_review = business['reviews'][i];
-                               max_review_value = reviewScore;
-                           }
-                           if(reviewTime > most_recent_review_value){
-                               most_recent_review = business['reviews'][i];
-                               most_recent_review_value = reviewTime;
-                           }
+                           reviews.push(business['reviews'][i]);
                            aboveThreshold += 1;
                        }
                    }
@@ -397,14 +384,14 @@
                        },
                        position: latlng,
                        sick_score: aboveThreshold,
+                       reviews: reviews,
                        rest_info:{
                            name: business['name'],
+                           id: business['business_id'],
                            address: business['address'],
                            total_review_count: business['review_count'],
                            url: business['url'],
                            rating: business['rating'],
-                           max_review: max_review,
-                           most_recent_review: most_recent_review
                        },
                        zIndex: 999
                    })
@@ -418,7 +405,7 @@
                     });
 
                     google.maps.event.addListener(marker, 'click', function() {
-                        updateClickBox(this.sick_score, this.rest_info);
+                        updateClickBox(this);
                         if(selectedMarker != null){
                             makeNeutralIcon(selectedMarker);
                         }
@@ -459,8 +446,8 @@
             }
 
     	}).fail(function (jqxhr, status, error) {
-console.log('error', status, error) }
-);
+                console.log('error', status, error) }
+            );
 	}
 
 	function makeNeutralIcon(marker){
@@ -483,7 +470,9 @@ console.log('error', status, error) }
           }
     }
 
-    function updateClickBox(sickScore, restInfo){
+    function updateClickBox(marker){
+          var restInfo = marker.rest_info;
+          var sickScore = marker.sick_score;
           var box = document.getElementById('rest-info-box');
           box.style.display = 'block';
           document.getElementById('rest-title').href = restInfo.url;
@@ -492,14 +481,61 @@ console.log('error', status, error) }
           document.getElementById('rating').textContent = restInfo.rating;
           document.getElementById('total-reviews').textContent = restInfo.total_review_count;
           document.getElementById('sick_score').textContent = sickScore;
-          document.getElementById('max-review-title').href = restInfo.max_review.review_url;
-          document.getElementById('max-review-title').textContent = 'Max Review';
-          document.getElementById('max-review').textContent = restInfo.max_review.text;
-          document.getElementById('recent-review-title').href = restInfo.most_recent_review.review_url;
-          document.getElementById('recent-review-title').textContent = 'Recent Review';
-          document.getElementById('recent-review').textContent = restInfo.most_recent_review.text;
+
+          displaySickReviews(marker.reviews, compareDates);
     }
 
+    function displaySickReviews(reviews, sortFunction){
+        reviews.sort(sortFunction);
+        var box = document.getElementById('rest-info-box');
+        var reviewHtml = document.getElementById('reviews');
+        reviewHtml.innerHTML = "";
+        for(var i = 0; i < reviews.length; i++){
+            var hsan = reviews[i]['classification_hsan'];
+            if(!("sentence_scores" in hsan) || hsan['sick_sentences'].length === 0){
+                continue;
+            }
+            else{
+                let allSentences = "";
+                for(var j = 0; j<hsan['sick_sentences'].length; j++){
+                    let sentence = hsan['sick_sentences'][j];
+                    allSentences += ' ... ' + sentence;
+                }
+                 let url = reviews[i]['review_url'];
+                 let date = getFormattedDate(new Date(reviews[i]['date_created']));
+                 let sickScore = reviews[i]['reg_total_score'];
+                 let rev = document.createElement('a');
+                 rev.className = 'rest_info';
+                 let linkText = document.createTextNode(date + ' ' + sickScore);
+                 rev.href = url;
+                 rev.setAttribute('target', '_blank');
+                 rev.title = 'yo';
+                 rev.appendChild(linkText);
+
+                 let revText = document.createElement('div');
+                 revText.className = 'review-text';
+                 revText.textContent = allSentences;
+                 reviewHtml.appendChild(rev);
+                 reviewHtml.appendChild(revText);
+            }
+        }
+
+
+    }
+
+    function compareDates(a, b){
+        var aDate = a['date_created'];
+        var bDate = b['date_created'];
+
+        return aDate < bDate ? 1 : -1;
+    }
+
+    function compareScores(a, b){
+        var aScore = a['reg_total_score'];
+        var bScore = b['reg_total_score'];
+
+        return aScore < bScore ? 1 : -1
+    }
 
     function styleFeature(feature) {
         var normalizedFillOpacity = (feature.getProperty('sick_score') - sickMin) /
