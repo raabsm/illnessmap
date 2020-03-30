@@ -198,6 +198,7 @@
 
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
+      var restSet = new Set();
 
       var startTime = (new Date(2005, 8, 2)).getTime();
       var endTime = (new Date()).getTime();
@@ -232,6 +233,7 @@
     }
 
     function changeMap(){
+        console.log("change_map called");
         for(var i = 0; i<markers.length; i++){
             markers[i].setMap(null);
         }
@@ -268,11 +270,8 @@
             slide: function( event, ui ) {
                  $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
              },
-            change: function(event, ui){
-                $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
-                startTime = ui.values[0] * 1000;
-                endTime = ui.values[1] * 1000;
-                changeMap();
+            stop: function(event, ui){
+                sliderDateChange(ui.values[0], ui.values[1]);
             }
 		})
 
@@ -299,7 +298,6 @@
             var option = this.value;
             var date = new Date();
             $("#date-slider").slider("disable");
-
             if (option == 'week'){
                 date.setDate(today.getDate() - 7);
             }
@@ -316,8 +314,10 @@
                 $("#date-slider").slider("enable");
                 date = new Date(startTime);
             }
-
+            console.log("change_map called before values");
             $("#date-slider").slider("values", [date.getTime()/1000, today.getTime()/1000]);
+            sliderDateChange(date.getTime()/1000, today.getTime()/1000);
+            console.log("changemap called after values");
         })
     })
 
@@ -333,9 +333,16 @@
           return month + '/' + day + '/' + year;
       }
 
+      function sliderDateChange(value1, value2){
+          console.log("slider change called");
+          $( "#date-slider-text" ).text( getFormattedDate(new Date(value1 *1000)) + " - " + getFormattedDate(new Date(value2 *1000)));
+          startTime = value1 * 1000;
+          endTime = value2 * 1000;
+          changeMap();
+      }
+
     function loadRestaurants(){
         $.getJSON("/static/march_zipcode_sick_reviews.json", function(zip_codes){
-            console.log('hello');
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
             for(var zip in zip_codes){
@@ -367,10 +374,11 @@
                    }
 
                    zip_sick_count += aboveThreshold;
-                   if(aboveThreshold < sickRestaurantThreshold){
+                   if(aboveThreshold < sickRestaurantThreshold || restSet.has(business['name'])){
                      return;
                    }
 
+                   restSet.add(business['name']);
                    var regular_icon = {
                            path: google.maps.SymbolPath.CIRCLE,
                            scale: aboveThreshold/scalingFactor,
@@ -401,9 +409,10 @@
                    google.maps.event.addListener(marker, 'mouseover', function() {
                         updateMouseoverBox(this.rest_info.name, this.sick_score);
 
-                        let icon = this.icon;
+                        var icon = this.icon;
                         icon.scale = this.normal_icon.scale + 3;
                         this.setIcon(icon);
+                        console.log(this.icon.scale, this.normal_icon.scale);
                     });
 
                     google.maps.event.addListener(marker, 'click', function() {
@@ -412,6 +421,10 @@
                             makeNeutralIcon(selectedMarker);
                         }
                         selectedMarker = this;
+
+                        for(let i = 0; i<markers.length; i++){
+                            console.log(markers[i].rest_info.name);
+                        }
 
                         this.setIcon('https://www.google.com/mapfiles/marker_green.png');
 
@@ -429,6 +442,7 @@
                        }
                    });  
                    markers.push(marker);
+                   console.log("pushed", marker.rest_info.name);
                 })
 
                 if(zip_sick_count > sickMax){
@@ -445,6 +459,7 @@
                     feature.setProperty('sick_score', zip_sick_count);
                 }
             }
+            console.log("finished for loop");
 
     	}).fail(function (jqxhr, status, error) {
                 console.log('error', status, error) }
