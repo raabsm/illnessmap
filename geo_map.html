@@ -124,6 +124,8 @@
             text-align: left;
             max-height: 150px;
             overflow: auto;
+            padding-top: 10px;
+            padding-bottom: 10px;
         }
 
     </style>
@@ -162,6 +164,7 @@
 
         <button onclick="scaleUp()">Scale Up</button>
         <button onclick="deselectMarker()">Deselect</button>
+        <div><button onclick="changeMap()" style="float:right;">Submit</button></div>
 
 	</div>
 
@@ -176,13 +179,16 @@
            <div class="rest-info-value" id="rating"></div>
        </div>
         <div class="rest-info">
-           <div class="rest-info-title">Sick Score: </div>
+           <div class="rest-info-title">Sick Review Count (within Slider bounds): </div>
            <div class="rest-info-value" id="sick_score"></div>
        </div>
        <div class="rest-info">
            <div class="rest-info-title">Total Reviews: </div>
            <div class="rest-info-value" id="total-reviews"></div>
        </div>
+       <button onclick="displaySickReviews(selectedMarker.reviews, compareDates)">Sort By Date</button>
+       <button onclick="displaySickReviews(selectedMarker.reviews, compareScores)">Sort By Score</button>
+
        <div id="reviews"></div>
    </div>
 
@@ -195,10 +201,10 @@
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
       var selectedMarker = null;
+      var xhr = null;
 
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
-      var restSet = new Set();
 
       var startTime = (new Date(2005, 8, 2)).getTime();
       var endTime = (new Date()).getTime();
@@ -233,11 +239,17 @@
     }
 
     function changeMap(){
-        console.log("change_map called");
+        if(xhr)
+            xhr.abort();
+
         for(var i = 0; i<markers.length; i++){
-            markers[i].setMap(null);
+            if(markers[i] !== selectedMarker)
+                markers[i].setMap(null);
         }
         markers = [];
+        if(selectedMarker != null){
+            markers.push(selectedMarker);
+        }
         loadRestaurants();
     }
 
@@ -254,7 +266,6 @@
             stop: function(event, ui){
                 sickReviewBottomThreshold = ui.values[0];
                 sickReviewTopThreshold = ui.values[1];
-                changeMap();
             }
 		})
 
@@ -271,7 +282,9 @@
                  $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
              },
             stop: function(event, ui){
-                sliderDateChange(ui.values[0], ui.values[1]);
+                $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[0] *1000)) + " - " + getFormattedDate(new Date(ui.values[1] *1000)));
+                startTime = ui.values[0] * 1000;
+                endTime = ui.values[1] * 1000;
             }
 		})
 
@@ -285,7 +298,6 @@
              },
             stop: function(event, ui){
                 sickRestaurantThreshold = ui.value;
-                changeMap();
             }
 		})
 
@@ -314,10 +326,7 @@
                 $("#date-slider").slider("enable");
                 date = new Date(startTime);
             }
-            console.log("change_map called before values");
             $("#date-slider").slider("values", [date.getTime()/1000, today.getTime()/1000]);
-            sliderDateChange(date.getTime()/1000, today.getTime()/1000);
-            console.log("changemap called after values");
         })
     })
 
@@ -333,22 +342,13 @@
           return month + '/' + day + '/' + year;
       }
 
-      function sliderDateChange(value1, value2){
-          console.log("slider change called");
-          $( "#date-slider-text" ).text( getFormattedDate(new Date(value1 *1000)) + " - " + getFormattedDate(new Date(value2 *1000)));
-          startTime = value1 * 1000;
-          endTime = value2 * 1000;
-          changeMap();
-      }
-
     function loadRestaurants(){
-        $.getJSON("/static/march_zipcode_sick_reviews.json", function(zip_codes){
+        xhr = $.getJSON("/static/march_zipcode_sick_reviews.json", function(zip_codes){
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
             for(var zip in zip_codes){
                 businesses = zip_codes[zip];
                 var zip_sick_count = 0;
-
                 businesses.forEach(function (business){    
                    var latlng = new google.maps.LatLng(business['lat-long'][0], 
                            business['lat-long'][1]);
@@ -356,29 +356,38 @@
                    var reviews = [];
 
                    var aboveThreshold = 0;
-                   for(var i = 0; i<business['reviews'].length; i++){
+                   for(var i = 0; i<business['reviews'].length; i++) {
                        var reviewScore = business['reviews'][i]['reg_total_score'];
                        var reviewTime = Date.parse(business['reviews'][i]['date_created']);
 
                        if (reviewScore < sickReviewBottomThreshold ||
                            reviewScore > sickReviewTopThreshold ||
                            reviewTime < startTime ||
-                           reviewTime > endTime){
+                           reviewTime > endTime) {
 
                            continue;
-                       }
-                       else{
+                       } else {
                            reviews.push(business['reviews'][i]);
                            aboveThreshold += 1;
                        }
                    }
-
                    zip_sick_count += aboveThreshold;
-                   if(aboveThreshold < sickRestaurantThreshold || restSet.has(business['name'])){
+
+                   if(selectedMarker != null && selectedMarker.rest_info.id == business['business_id']){
+                       console.log("ran if statement on", selectedMarker.rest_info.name);
+                       selectedMarker.normal_icon.scale = aboveThreshold/scalingFactor;
+                       selectedMarker.reviews = reviews;
+                       selectedMarker.rest_info.total_review_count = business['review_count'];
+                       selectedMarker.rest_info.rating = business['rating'];
+                       selectedMarker.sick_score = aboveThreshold;
+                       updateClickBox(selectedMarker, compareDates);
+                       return;
+                   }
+
+                   if(aboveThreshold < sickRestaurantThreshold){
                      return;
                    }
 
-                   restSet.add(business['name']);
                    var regular_icon = {
                            path: google.maps.SymbolPath.CIRCLE,
                            scale: aboveThreshold/scalingFactor,
@@ -412,20 +421,14 @@
                         var icon = this.icon;
                         icon.scale = this.normal_icon.scale + 3;
                         this.setIcon(icon);
-                        console.log(this.icon.scale, this.normal_icon.scale);
                     });
 
                     google.maps.event.addListener(marker, 'click', function() {
-                        updateClickBox(this);
+                        updateClickBox(this, compareDates);
                         if(selectedMarker != null){
                             makeNeutralIcon(selectedMarker);
                         }
                         selectedMarker = this;
-
-                        for(let i = 0; i<markers.length; i++){
-                            console.log(markers[i].rest_info.name);
-                        }
-
                         this.setIcon('https://www.google.com/mapfiles/marker_green.png');
 
                     });
@@ -442,7 +445,6 @@
                        }
                    });  
                    markers.push(marker);
-                   console.log("pushed", marker.rest_info.name);
                 })
 
                 if(zip_sick_count > sickMax){
@@ -459,8 +461,7 @@
                     feature.setProperty('sick_score', zip_sick_count);
                 }
             }
-            console.log("finished for loop");
-
+            xhr = null;
     	}).fail(function (jqxhr, status, error) {
                 console.log('error', status, error) }
             );
@@ -481,12 +482,13 @@
           for(var i =0; i < markers.length; i++){
               var icon = markers[i].normal_icon;
               icon.scale += 2;
-              markers[i].setIcon(icon);
               markers[i].normal_icon = icon;
+              if(markers[i] !== selectedMarker)
+                  markers[i].setIcon(icon);
           }
     }
 
-    function updateClickBox(marker){
+    function updateClickBox(marker, sortFunction){
           var restInfo = marker.rest_info;
           var sickScore = marker.sick_score;
           var box = document.getElementById('rest-info-box');
@@ -498,7 +500,7 @@
           document.getElementById('total-reviews').textContent = restInfo.total_review_count;
           document.getElementById('sick_score').textContent = sickScore;
 
-          displaySickReviews(marker.reviews, compareDates);
+          displaySickReviews(marker.reviews, sortFunction);
     }
 
     function displaySickReviews(reviews, sortFunction){
@@ -519,19 +521,19 @@
                 }
                  let url = reviews[i]['review_url'];
                  let date = getFormattedDate(new Date(reviews[i]['date_created']));
-                 let sickScore = reviews[i]['reg_total_score'];
-                 let rev = document.createElement('a');
-                 rev.className = 'rest_info';
+                 let sickScore = reviews[i]['reg_total_score'].toFixed(2);
+                 let revTitle = document.createElement('a');
+                 revTitle.className = 'rest_info_title';
+                 revTitle.setAttribute("style", "color:navajowhite; display:flex;");
                  let linkText = document.createTextNode(date + ' ' + sickScore);
-                 rev.href = url;
-                 rev.setAttribute('target', '_blank');
-                 rev.title = 'yo';
-                 rev.appendChild(linkText);
+                 revTitle.href = url;
+                 revTitle.setAttribute('target', '_blank');
+                 revTitle.appendChild(linkText);
 
                  let revText = document.createElement('div');
                  revText.className = 'review-text';
                  revText.textContent = allSentences;
-                 reviewHtml.appendChild(rev);
+                 reviewHtml.appendChild(revTitle);
                  reviewHtml.appendChild(revText);
             }
         }
