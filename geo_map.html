@@ -139,6 +139,7 @@
     <div id=slider-box class="text-box">
 
             <div class="slider-title">Sick Review Slider</div>
+
             <div id="sick-slider-text" class="rest-info"></div>
             <div id = "sick-review-slider"></div>
 
@@ -161,7 +162,13 @@
             <div id="rest-slider-text" class="rest-info"></div>
             <div id = "sick-rest-slider"></div>
 
-
+            <div id = "radio-buttons">
+                <form action="">
+                    <input type="radio" name="classification" value="reg_total_score">Logistic
+                    <input type="radio" name="classification" value="hsan_total_score">Neural
+                    <input type="radio" name="classification" value="union" checked="checked">Union
+                </form>
+            </div>
         <button onclick="scaleUp()">Scale Up</button>
         <button onclick="deselectMarker()">Deselect</button>
         <div><button onclick="changeMap()" style="float:right;">Submit</button></div>
@@ -202,6 +209,7 @@
       var scalingFactor = 3;
       var selectedMarker = null;
       var xhr = null;
+      var classification = 'union';
 
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
@@ -242,6 +250,8 @@
         if(xhr)
             xhr.abort();
 
+        classification = document.querySelector('input[name="classification"]:checked').value;
+        console.log(classification);
         for(var i = 0; i<markers.length; i++){
             if(markers[i] !== selectedMarker)
                 markers[i].setMap(null);
@@ -281,7 +291,7 @@
             slide: function( event, ui ) {
                  $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
              },
-            stop: function(event, ui){
+            change: function(event, ui){
                 $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[0] *1000)) + " - " + getFormattedDate(new Date(ui.values[1] *1000)));
                 startTime = ui.values[0] * 1000;
                 endTime = ui.values[1] * 1000;
@@ -357,7 +367,13 @@
 
                    var aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++) {
-                       var reviewScore = business['reviews'][i]['reg_total_score'];
+                       var reviewScore = 0;
+                       if(classification == 'union'){
+                           reviewScore = Math.max(business['reviews'][i]['reg_total_score'], business['reviews'][i]['hsan_total_score']);
+                       }
+                       else{
+                           reviewScore = business['reviews'][i][classification];
+                       }
                        var reviewTime = Date.parse(business['reviews'][i]['date_created']);
 
                        if (reviewScore < sickReviewBottomThreshold ||
