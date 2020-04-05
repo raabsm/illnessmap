@@ -227,7 +227,7 @@
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
 
-      var startTime = (new Date(2005, 8, 2)).getTime();
+      var startTime = (new Date(2016, 1, 1)).getTime();
       var endTime = (new Date()).getTime();
 
       function initMap() {
@@ -264,7 +264,7 @@
             xhr.abort();
 
         classification = document.querySelector('input[name="classification"]:checked').value;
-        console.log(classification);
+        console.log(getFormattedDate(new Date(startTime)), getFormattedDate(new Date(endTime)), classification);
         for(var i = 0; i<markers.length; i++){
             if(markers[i] !== selectedMarker)
                 markers[i].setMap(null);
@@ -292,15 +292,14 @@
             }
 		})
 
-        var sliderStartTime = new Date(2012, 1, 1).getTime() / 1000;
-        var sliderStopTime =  new Date(2016, 01, 01).getTime() / 1000;
+        let sliderStartTime = new Date(2005, 8, 2).getTime();
 
         $("#date-slider").slider({
             range: true,
-            min: startTime / 1000,
+            min: sliderStartTime / 1000,
             max: endTime / 1000,
             step: 604800,
-            values: [sliderStartTime, sliderStopTime],
+            values: [startTime / 1000, endTime / 1000],
             slide: function( event, ui ) {
                  $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
              },
@@ -325,7 +324,7 @@
 		})
 
         $("#sick-slider-text").text(sickReviewBottomThreshold + " - " + sickReviewTopThreshold);
-        $("#date-slider-text").text(getFormattedDate(new Date(sliderStartTime *1000)) + " - " + getFormattedDate(new Date(sliderStopTime*1000)));
+        $("#date-slider-text").text(getFormattedDate(new Date(startTime)) + " - " + getFormattedDate(new Date(endTime)));
         $("#rest-slider-text").text(sickRestaurantThreshold);
 
         $("#date-select").on("change", function() {
@@ -467,10 +466,10 @@
                            var feature = zipFeature['feature'];
                            var sickScoreString = feature.getProperty('sick_score');
                            updateMouseoverBox(feature.getProperty('postalcode'), sickScoreString);
+                       }
 
-                           if(selectedMarker!== this){
-                               makeNeutralIcon(this);
-                           }
+                       if(selectedMarker!== this){
+                           makeNeutralIcon(this);
                        }
                    });  
                    markers.push(marker);
