@@ -103,11 +103,22 @@
             line-height: 28px;
             text-align: left;
         }
+        .review-info{
+            line-height: 28px;
+            display: flex
+        }
 
         .rest-info-title{
             display: inline-block;
             color: white;
         }
+        .sentence-score{
+            display: inline-block;
+            position:absolute;
+            color: white;
+            float: left;
+        }
+
         .rest-info-value{
             float: right;
             display: inline-block;
@@ -121,11 +132,13 @@
             display: inline-flex;
         }
         .review-text{
+            position: relative;
             text-align: left;
-            max-height: 150px;
+            max-height: 100px;
+            left: 13%;
             overflow: auto;
-            padding-top: 10px;
-            padding-bottom: 10px;
+            float: right;
+            padding-right: 100px;
         }
 
     </style>
@@ -526,15 +539,10 @@
         reviewHtml.innerHTML = "";
         for(var i = 0; i < reviews.length; i++){
             var hsan = reviews[i]['classification_hsan'];
-            if(!("sentence_scores" in hsan) || hsan['sick_sentences'].length === 0){
+            if(!("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
                 continue;
             }
             else{
-                let allSentences = "";
-                for(var j = 0; j<hsan['sick_sentences'].length; j++){
-                    let sentence = hsan['sick_sentences'][j];
-                    allSentences += ' ... ' + sentence;
-                }
                  let url = reviews[i]['review_url'];
                  let date = getFormattedDate(new Date(reviews[i]['date_created']));
                  let sickScore = reviews[i]['reg_total_score'].toFixed(2);
@@ -545,16 +553,62 @@
                  revTitle.href = url;
                  revTitle.setAttribute('target', '_blank');
                  revTitle.appendChild(linkText);
-
-                 let revText = document.createElement('div');
-                 revText.className = 'review-text';
-                 revText.textContent = allSentences;
                  reviewHtml.appendChild(revTitle);
-                 reviewHtml.appendChild(revText);
+
+                 let sentenceIndicesToDisplay;
+
+                 if(hsan['sick_sentences'].length > 0){
+                     sentenceIndicesToDisplay = indicesOfSickSentences(hsan['sick_sentences'], reviews[i]['sentences']);
+                 }
+                 else{
+                     sentenceIndicesToDisplay = topSickSentences(hsan['sentence_scores']);
+                 }
+
+                 for(let j = 0; j < sentenceIndicesToDisplay.length; j++){
+                     let index = sentenceIndicesToDisplay[j];
+                     let sentenceInfo = document.createElement('div');
+                     sentenceInfo.className = 'review-info';
+
+                     let sentenceScore = document.createElement('div');
+                     sentenceScore.className = "sentence-score";
+                     sentenceScore.textContent = hsan['sentence_scores'][index].toFixed(2);
+
+                     let revText = document.createElement('div');
+                     revText.className = 'review-text';
+                     revText.textContent = reviews[i]['sentences'][index];
+
+                     sentenceInfo.appendChild(sentenceScore);
+                     sentenceInfo.appendChild(revText);
+                     reviewHtml.appendChild(sentenceInfo);
+                 }
+
             }
         }
 
 
+    }
+
+    function indicesOfSickSentences(sickSentences, reviewSentences){
+        let indices = [];
+          for(let i = 0; i< reviewSentences.length; i++){
+              for(let j = 0; j < sickSentences.length; j++){
+                  if (reviewSentences[i].includes(sickSentences[j]))
+                      indices.push(i);
+              }
+          }
+        return indices;
+    }
+
+    function topSickSentences(sentencesScores){
+        let maxIndex = 0;
+        let maxScore = sentencesScores[0];
+        for(let i = 0; i< sentencesScores.length; i++){
+            if (sentencesScores[i] > maxScore){
+                maxScore = sentencesScores[i];
+                maxIndex = i;
+            }
+        }
+        return [maxIndex];
     }
 
     function compareDates(a, b){
