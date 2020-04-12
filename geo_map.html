@@ -92,6 +92,7 @@
             text-align: center;
             display: none;
         }
+
         #rest-title{
             font-weight: 400;
             margin-bottom: 10px;
@@ -135,15 +136,14 @@
             position: relative;
             text-align: left;
             max-height: 100px;
-            left: 13%;
+            left: 50px;
             overflow: auto;
             float: right;
-            padding-right: 100px;
+            padding-right: 50px;
         }
 
     </style>
   </head>
-  <body>
    <div id="data-box" class="nicebox">
       <label id="data-label" for="data-value"></label>
       <span id="data-value"></span>
@@ -177,8 +177,8 @@
 
             <div id = "radio-buttons">
                 <form action="">
-                    <input type="radio" name="classification" value="reg_total_score">Logistic
-                    <input type="radio" name="classification" value="hsan_total_score">Neural
+                    <input type="radio" name="classification" value="reg_total_score">LR
+                    <input type="radio" name="classification" value="hsan_total_score">HSAN
                     <input type="radio" name="classification" value="union" checked="checked">Union
                 </form>
             </div>
@@ -206,10 +206,12 @@
            <div class="rest-info-title">Total Reviews: </div>
            <div class="rest-info-value" id="total-reviews"></div>
        </div>
-       <button onclick="displaySickReviews(selectedMarker.reviews, compareDates)">Sort By Date</button>
-       <button onclick="displaySickReviews(selectedMarker.reviews, compareScores)">Sort By Score</button>
-
+       <button onclick="displaySickReviews(selectedMarker.reviews, compareDates, 'reviews')">Sort By Date</button>
+       <button onclick="displaySickReviews(selectedMarker.reviews, compareLRScores, 'reviews')">Sort By LR Score</button>
+       <button onclick="displaySickReviews(selectedMarker.reviews, compareHSANScores, 'reviews')">Sort By HSAN Score</button>
+       
        <div id="reviews"></div>
+       <button onclick="openBusinessWindow()" style="float:right;">More Info</button>
    </div>
 
     <div id="map"></div>
@@ -223,6 +225,7 @@
       var selectedMarker = null;
       var xhr = null;
       var classification = 'union';
+      var allReviewsForSelectedMarker = null;
 
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
@@ -259,11 +262,45 @@
             }
     }
 
+    function openBusinessWindow(){
+        let params = {
+            business_id: selectedMarker.rest_info.id,
+            start_time: startTime,
+            end_time: endTime,
+            review_bottom_threshold: sickReviewBottomThreshold,
+            review_top_threshold: sickReviewTopThreshold
+        };
+        OpenWindowWithPost("/restaurant_info", params);
+    }
+
+    function OpenWindowWithPost(url, params)
+   {
+            var form = document.createElement("form");
+            form.setAttribute("method", "post");
+            form.setAttribute("action", url);
+            form.setAttribute("target", '_blank');
+
+            for (var i in params) {
+                if (params.hasOwnProperty(i)) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = i;
+                    input.value = params[i];
+                    form.appendChild(input);
+                    console.log(input)
+                }
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+    }
+
     function changeMap(){
+        classification = document.querySelector('input[name="classification"]:checked').value;
         if(xhr)
             xhr.abort();
 
-        classification = document.querySelector('input[name="classification"]:checked').value;
         console.log(getFormattedDate(new Date(startTime)), getFormattedDate(new Date(endTime)), classification);
         for(var i = 0; i<markers.length; i++){
             if(markers[i] !== selectedMarker)
@@ -372,14 +409,14 @@
                 businesses = zip_codes[zip];
                 var zip_sick_count = 0;
                 businesses.forEach(function (business){    
-                   var latlng = new google.maps.LatLng(business['lat-long'][0], 
+                   let latlng = new google.maps.LatLng(business['lat-long'][0],
                            business['lat-long'][1]);
 
-                   var reviews = [];
+                   let reviews = [];
 
-                   var aboveThreshold = 0;
+                   let aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++) {
-                       var reviewScore = 0;
+                       let reviewScore = 0;
                        if(classification == 'union'){
                            reviewScore = Math.max(business['reviews'][i]['reg_total_score'], business['reviews'][i]['hsan_total_score']);
                        }
@@ -458,7 +495,6 @@
                         }
                         selectedMarker = this;
                         this.setIcon('https://www.google.com/mapfiles/marker_green.png');
-
                     });
 
                    google.maps.event.addListener(marker, 'mouseout', function() {
@@ -528,13 +564,12 @@
           document.getElementById('total-reviews').textContent = restInfo.total_review_count;
           document.getElementById('sick_score').textContent = sickScore;
 
-          displaySickReviews(marker.reviews, sortFunction);
+          displaySickReviews(marker.reviews, compareDates, 'reviews');
     }
 
-    function displaySickReviews(reviews, sortFunction){
+    function displaySickReviews(reviews, sortFunction, reviewsDiv){
         reviews.sort(sortFunction);
-        var box = document.getElementById('rest-info-box');
-        var reviewHtml = document.getElementById('reviews');
+        var reviewHtml = document.getElementById(reviewsDiv);
         reviewHtml.innerHTML = "";
         for(var i = 0; i < reviews.length; i++){
             var hsan = reviews[i]['classification_hsan'];
@@ -542,17 +577,27 @@
                 continue;
             }
             else{
+                 console.log(reviews[i]['review_id']);
+                 let reviewDiv = document.createElement('div');
                  let url = reviews[i]['review_url'];
                  let date = getFormattedDate(new Date(reviews[i]['date_created']));
-                 let sickScore = reviews[i]['reg_total_score'].toFixed(2);
+                 let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
+                 let hsanSickScore = reviews[i]['hsan_total_score'];
+                 if (hsanSickScore == 0){
+                     hsanSickScore = 'N/A'
+                 }
+                 else{
+                     hsanSickScore = hsanSickScore.toFixed(2);
+                 }
                  let revTitle = document.createElement('a');
                  revTitle.className = 'rest_info_title';
                  revTitle.setAttribute("style", "color:navajowhite; display:flex;");
-                 let linkText = document.createTextNode(date + ' ' + sickScore);
+                 let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
                  revTitle.href = url;
                  revTitle.setAttribute('target', '_blank');
                  revTitle.appendChild(linkText);
-                 reviewHtml.appendChild(revTitle);
+
+                 reviewDiv.appendChild(revTitle);
 
                  let sentenceIndicesToDisplay;
 
@@ -578,9 +623,9 @@
 
                      sentenceInfo.appendChild(sentenceScore);
                      sentenceInfo.appendChild(revText);
-                     reviewHtml.appendChild(sentenceInfo);
+                     reviewDiv.appendChild(sentenceInfo);
                  }
-
+                reviewHtml.appendChild(reviewDiv);
             }
         }
 
@@ -617,9 +662,21 @@
         return aDate < bDate ? 1 : -1;
     }
 
-    function compareScores(a, b){
-        var aScore = a['reg_total_score'];
-        var bScore = b['reg_total_score'];
+    function compareLRScores(a, b){
+        let compare = 'reg_total_score';
+
+        var aScore = a[compare];
+        var bScore = b[compare];
+
+        return aScore < bScore ? 1 : -1
+    }
+
+
+    function compareHSANScores(a, b){
+        let compare = 'hsan_total_score';
+
+        var aScore = a[compare];
+        var bScore = b[compare];
 
         return aScore < bScore ? 1 : -1
     }

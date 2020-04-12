@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+     <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+              rel = "stylesheet">
+      <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      .nicebox {
+		position: absolute;
+		text-align: center;
+		font-family: "Roboto", "Arial", sans-serif;
+		font-size: 13px;
+		z-index: 5;
+		box-shadow: 0 4px 6px -4px #333;
+		padding: 5px 10px;
+		background: rgb(255,255,255);
+		background: linear-gradient(to bottom,rgba(255,255,255,1) 0%,rgba(245,245,245,1) 100%);
+		border: rgb(229, 229, 229) 1px solid;
+	  }
+	  .ui-slider-handle {
+		color: black;
+		font-size: 10px;
+		padding: 3px;
+		text-shadow: 0 1px 0 #FFFFFF;
+		text-decoration:none;
+        text-align:center;
+		}
+      .text-box {
+          position: absolute;
+          padding: 10px;
+          background: white;
+          z-index: 900;
+          color: #eaf2ff;
+      }
+      .ui-slider-horizontal {
+          height: 8px;
+          width: 300px;
+          z-index: 999;
+      }
+      .ui-widget-content {
+          background: white;
+          margin-bottom: 10px;
+      }
+      .ui-slider-horizontal .ui-slider-range {
+            top: 0;
+            background: black;
+            height: 100%;
+        }
+      .ui-widget-content .ui-state-default {
+          background: red;
+          width: 3px;
+          height: 10px;
+      }
+
+
+        #slider-box{
+            top: 50px;
+            right: 10px;
+
+        }
+        #rest-info-box{
+            top: 50px;
+            width: 500px;
+            right: 10px;
+            padding: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        #rest-title{
+            font-weight: 400;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 25px;
+            color: navajowhite;
+        }
+        .rest-info{
+            line-height: 28px;
+            text-align: left;
+            color:black;
+        }
+        .review-info{
+            line-height: 28px;
+            display: flex
+        }
+
+        .rest-info-title{
+            display: inline-block;
+            color: white;
+        }
+        .sentence-score{
+            display: inline-block;
+            position:absolute;
+            color: black;
+            float: left;
+        }
+
+        .rest-info-value{
+            float: right;
+            display: inline-block;
+            color: #eee;
+        }
+        .slider-title{
+            line-height: 28px;
+            text-align: left;
+            color: black;
+            font-size: 20px;
+            display: inline-flex;
+        }
+        .review-text{
+            position: relative;
+            text-align: left;
+            max-height: 100px;
+            left: 50px;
+            overflow: auto;
+            float: right;
+            padding-right: 50px;
+        }
+
+      </style>
+  </head>
+  <body onload="loadReviews()">
+
+     <div id=slider-box class="text-box">
+
+        <div class="slider-title">Sick Review Slider</div>
+
+        <div id="sick-slider-text" class="rest-info"></div>
+        <div id = "sick-review-slider"></div>
+
+
+        <div class="slider-title">Date Slider</div>
+        <form id="select-form" style = "display: inline; float: right; margin-top: 4px">
+          <select id="date-select">
+              <option selected="selected" value = "custom">Custom</option>
+              <option value = "week">Last Week</option>
+              <option value = "month">Last Month</option>
+              <option value = "6month">Last 6 Months</option>
+              <option value = "year">Last Year</option>
+          </select>
+        </form>
+        <div id="date-slider-text" class="rest-info"></div>
+        <div id = "date-slider"></div>
+
+        <div id = "radio-buttons">
+            <form action="" style="color:black;">
+                <input type="radio" name="classification" value="reg_total_score" onclick="updateExpandedReviews()">LR
+                <input type="radio" name="classification" value="hsan_total_score" onclick="updateExpandedReviews()">HSAN
+                <input type="radio" name="classification" value="union" checked="checked" onclick="updateExpandedReviews()">Union
+            </form>
+        </div>
+     </div>
+     <div id="expanded-reviews"></div>
+
+    <script>
+        var sickReviewBottomThreshold = {{ review_bottom_threshold }}
+        var businessId = '{{ business_id }}'
+        var sickReviewTopThreshold = {{ review_top_threshold }}
+        var startTime = {{ start_time }}
+        var endTime = {{ end_time }}
+        var classification = document.querySelector('input[name="classification"]:checked').value;
+        var reviews = null;
+        var aboveThreshold = 0;
+
+        function loadReviews(){
+            $.getJSON("/static/april_reviews_per_business.json", function(businesses){
+                reviews = businesses[businessId];
+                console.log(reviews);
+                updateExpandedReviews();
+            })
+        }
+        $(function (){
+            $("#sick-review-slider").slider({
+                range: true,
+                min: 0.1,
+                max: 1.0,
+                step: 0.1,
+                values: [sickReviewBottomThreshold, sickReviewTopThreshold],
+                slide: function(event, ui){
+                     $("#sick-slider-text").text( ui.values[0] + " - " + ui.values[1]);
+                },
+                stop: function(event, ui){
+                    sickReviewBottomThreshold = ui.values[0];
+                    sickReviewTopThreshold = ui.values[1];
+                    updateExpandedReviews();
+                }
+		    })
+
+            let sliderStartTime = new Date(2005, 8, 2).getTime();
+
+            $("#date-slider").slider({
+                range: true,
+                min: sliderStartTime / 1000,
+                max: endTime / 1000,
+                step: 604800,
+                values: [startTime / 1000, endTime / 1000],
+                slide: function( event, ui ) {
+                     $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[ 0 ] *1000)) + " - " + getFormattedDate(new Date(ui.values[ 1 ] *1000)));
+                 },
+                change: function(event, ui){
+                    $( "#date-slider-text" ).text( getFormattedDate(new Date(ui.values[0] *1000)) + " - " + getFormattedDate(new Date(ui.values[1] *1000)));
+                    startTime = ui.values[0] * 1000;
+                    endTime = ui.values[1] * 1000;
+                    updateExpandedReviews();
+                }
+            })
+
+            $("#sick-slider-text").text(sickReviewBottomThreshold + " - " + sickReviewTopThreshold);
+            $("#date-slider-text").text(getFormattedDate(new Date(startTime)) + " - " + getFormattedDate(new Date(endTime)));
+            $("#date-select").on("change", function() {
+                var today = new Date();
+                var option = this.value;
+                var date = new Date();
+                $("#date-slider").slider("disable");
+                if (option == 'week'){
+                    date.setDate(today.getDate() - 7);
+                }
+                else if(option == 'month'){
+                    date.setMonth(today.getMonth() - 1);
+                }
+                else if(option == '6month'){
+                    date.setMonth(today.getMonth() - 6);
+                }
+                else if(option == 'year'){
+                    date.setFullYear(today.getFullYear() - 1);
+                }
+                else{
+                    $("#date-slider").slider("enable");
+                    date = new Date(startTime);
+                }
+                $("#date-slider").slider("values", [date.getTime()/1000, today.getTime()/1000]);
+            })
+        })
+
+        function getFormattedDate(date) {
+          var year = date.getFullYear();
+
+          var month = (1 + date.getMonth()).toString();
+          month = month.length > 1 ? month : '0' + month;
+
+          var day = date.getDate().toString();
+          day = day.length > 1 ? day : '0' + day;
+
+          return month + '/' + day + '/' + year;
+      }
+
+    function updateExpandedReviews(){
+        classification = document.querySelector('input[name="classification"]:checked').value;
+        aboveThreshold = 0;
+        let reviewsToShow = [];
+        for(let i = 0; i < reviews.length; i++){
+            let reviewScore = 0;
+           if(classification == 'union'){
+               reviewScore = Math.max(reviews[i]['reg_total_score'], reviews[i]['hsan_total_score']);
+           }
+           else{
+               reviewScore = reviews[i][classification];
+           }
+           var reviewTime = Date.parse(reviews[i]['date_created']);
+
+           if (reviewScore < sickReviewBottomThreshold ||
+               reviewScore > sickReviewTopThreshold ||
+               reviewTime < startTime ||
+               reviewTime > endTime) {
+
+               continue;
+           } else {
+               aboveThreshold++;
+               reviewsToShow.push(reviews[i]);
+           }
+        }
+        displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews')
+    }
+
+    function displaySickReviews(reviews, sortFunction, reviewsDiv){
+        reviews.sort(sortFunction);
+        var reviewHtml = document.getElementById(reviewsDiv);
+        reviewHtml.innerHTML = "<h2>Sick Score: " + aboveThreshold + "</h2>";
+        for(var i = 0; i < reviews.length; i++){
+            var hsan = reviews[i]['classification_hsan'];
+            if(!("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
+                continue;
+            }
+            else{
+                 let reviewDiv = document.createElement('div');
+                 let url = reviews[i]['review_url'];
+                 let date = getFormattedDate(new Date(reviews[i]['date_created']));
+                 let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
+                 let hsanSickScore = reviews[i]['hsan_total_score'];
+                 if (hsanSickScore == 0){
+                     hsanSickScore = 'N/A'
+                 }
+                 else{
+                     hsanSickScore = hsanSickScore.toFixed(2);
+                 }
+                 let revTitle = document.createElement('a');
+                 revTitle.className = 'rest_info_title';
+                 revTitle.setAttribute("style", "color:red; display:flex;");
+                 let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
+                 revTitle.href = url;
+                 revTitle.setAttribute('target', '_blank');
+                 revTitle.appendChild(linkText);
+
+                 reviewDiv.appendChild(revTitle);
+
+                 let sentenceIndicesToDisplay;
+
+                 if(hsan['sick_sentences'].length > 0){
+                     sentenceIndicesToDisplay = indicesOfSickSentences(hsan['sick_sentences'], reviews[i]['sentences']);
+                 }
+                 else{
+                     sentenceIndicesToDisplay = topSickSentences(hsan['sentence_scores']);
+                 }
+
+                 for(let j = 0; j < sentenceIndicesToDisplay.length; j++){
+                     let index = sentenceIndicesToDisplay[j];
+                     let sentenceInfo = document.createElement('div');
+                     sentenceInfo.className = 'review-info';
+
+                     let sentenceScore = document.createElement('div');
+                     sentenceScore.className = "sentence-score";
+                     sentenceScore.textContent = hsan['sentence_scores'][index].toFixed(2);
+
+                     let revText = document.createElement('div');
+                     revText.className = 'review-text';
+                     revText.textContent = reviews[i]['sentences'][index];
+
+                     sentenceInfo.appendChild(sentenceScore);
+                     sentenceInfo.appendChild(revText);
+                     reviewDiv.appendChild(sentenceInfo);
+                 }
+                reviewHtml.appendChild(reviewDiv);
+            }
+        }
+
+
+    }
+
+    function indicesOfSickSentences(sickSentences, reviewSentences){
+        let indices = [];
+          for(let i = 0; i< reviewSentences.length; i++){
+              for(let j = 0; j < sickSentences.length; j++){
+                  if (reviewSentences[i].includes(sickSentences[j]))
+                      indices.push(i);
+              }
+          }
+        return indices;
+    }
+
+    function topSickSentences(sentencesScores){
+        let maxIndex = 0;
+        let maxScore = sentencesScores[0];
+        for(let i = 0; i< sentencesScores.length; i++){
+            if (sentencesScores[i] > maxScore){
+                maxScore = sentencesScores[i];
+                maxIndex = i;
+            }
+        }
+        return [maxIndex];
+    }
+
+    function compareDates(a, b){
+        var aDate = a['date_created'];
+        var bDate = b['date_created'];
+
+        return aDate < bDate ? 1 : -1;
+    }
+
+    function compareLRScores(a, b){
+        let compare = 'reg_total_score';
+
+        var aScore = a[compare];
+        var bScore = b[compare];
+
+        return aScore < bScore ? 1 : -1
+    }
+
+
+    function compareHSANScores(a, b){
+        let compare = 'hsan_total_score';
+
+        var aScore = a[compare];
+        var bScore = b[compare];
+
+        return aScore < bScore ? 1 : -1
+    }
+
+    </script>
+  </body>
+
+</html>
