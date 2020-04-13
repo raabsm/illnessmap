@@ -796,6 +796,7 @@
     function mouseOutOfRegion(event) {
         event.feature.setProperty('state', 'normal');
         zipFeature['over'] = false;
+        changeHistogram(reviewsForHist);
     }
     
     </script>
