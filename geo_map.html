@@ -281,7 +281,7 @@
         map.data.setStyle(styleFeature);
         map.data.addListener('mouseover', mouseInToRegion);
         map.data.addListener('mouseout', mouseOutOfRegion);
-        
+
     }
 
     function deselectMarker(){
@@ -437,6 +437,7 @@
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
             for(var zip in zip_codes){
+                let reviewDatesPerZip = [];
                 businesses = zip_codes[zip];
                 var zip_sick_count = 0;
                 businesses.forEach(function (business){    
@@ -465,6 +466,7 @@
                        } else {
                            reviews.push(business['reviews'][i]);
                            reviewsForHist.push(new Date(reviewTime));
+                           reviewDatesPerZip.push(new Date(reviewTime));
                            aboveThreshold += 1;
                        }
                    }
@@ -555,10 +557,11 @@
                 }
                 else{
                     feature.setProperty('sick_score', zip_sick_count);
+                    feature.setProperty('review_dates', reviewDatesPerZip);
                 }
             }
             xhr = null;
-            changeHistogram();
+            changeHistogram(reviewsForHist);
     	}).fail(function (jqxhr, status, error) {
                 console.log('error', status, error) }
             );
@@ -714,7 +717,7 @@
         return aScore < bScore ? 1 : -1
     }
 
-    function changeHistogram(){
+    function changeHistogram(values){
         x = d3.scaleTime().domain([new Date(startTime), new Date(endTime)]).range([0, width]);
 
          var histogram = d3.histogram()
@@ -722,7 +725,7 @@
              .domain(x.domain())  // then the domain of the graphic
             .thresholds(x.ticks(10)); // then the numbers of bins
 
-        var bins = histogram(reviewsForHist);
+        var bins = histogram(values);
 
         y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
         yAxis.transition()
@@ -743,7 +746,7 @@
         .duration(1000)
           .attr("x", 1)
           .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-          .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+          .attr("width", function(d) { return Math.max(x(d.x1) - x(d.x0) -1, 0); })
           .attr("height", function(d) { return height - y(d.length); })
           .style("fill", "blue")
 
@@ -785,6 +788,9 @@
 		
 		var sickScoreString = event.feature.getProperty('sick_score');
 		updateMouseoverBox(event.feature.getProperty('postalcode'), sickScoreString);
+		if(event.feature.getProperty('review_dates')) {
+            changeHistogram(event.feature.getProperty('review_dates'));
+        }
 	}
 
     function mouseOutOfRegion(event) {
