@@ -4,6 +4,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
     <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+      <script src = "https://d3js.org/d3.v4.js"></script>
+
      <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
               rel = "stylesheet">
       <style>
@@ -120,6 +122,11 @@
             float: right;
             padding-right: 50px;
         }
+          #histogram{
+            position:absolute;
+            z-index:2;
+            bottom:10px;
+        }
 
       </style>
   </head>
@@ -155,6 +162,7 @@
         </div>
      </div>
      <div id="expanded-reviews"></div>
+      <div id="histogram"></div>
 
     <script>
         var sickReviewBottomThreshold = {{ review_bottom_threshold }}
@@ -165,6 +173,27 @@
         var classification = document.querySelector('input[name="classification"]:checked').value;
         var reviews = null;
         var aboveThreshold = 0;
+
+         var margin = {top: 10, right: 30, bottom: 30, left: 40},
+                    width = 450 - margin.left - margin.right,
+                    height = 100 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+          var svg = d3.select("#histogram")
+              .append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+              .attr("transform",
+                  "translate(" + margin.left + "," + margin.top + ")");
+          var reviewsForHist = [];
+          var y = d3.scaleLinear().range([height, 0]);
+          var yAxis = svg.append("g");
+
+          var x = d3.scaleTime().domain([new Date(startTime), new Date(endTime)]).range([0, width]);
+          var xAxis = svg.append("g").attr("transform", "translate(0," + height + ")");
+
+
 
         function loadReviews(){
             $.getJSON("/static/april_reviews_per_business.json", function(businesses){
@@ -249,6 +278,7 @@
       }
 
     function updateExpandedReviews(){
+        reviewsForHist = [];
         classification = document.querySelector('input[name="classification"]:checked').value;
         aboveThreshold = 0;
         let reviewsToShow = [];
@@ -269,11 +299,13 @@
 
                continue;
            } else {
+               reviewsForHist.push(new Date(reviewTime));
                aboveThreshold++;
                reviewsToShow.push(reviews[i]);
            }
         }
-        displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews')
+        displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews');
+        changeHistogram(reviewsForHist);
     }
 
     function displaySickReviews(reviews, sortFunction, reviewsDiv){
@@ -304,7 +336,6 @@
                  revTitle.href = url;
                  revTitle.setAttribute('target', '_blank');
                  revTitle.appendChild(linkText);
-
                  reviewDiv.appendChild(revTitle);
 
                  let sentenceIndicesToDisplay;
@@ -387,6 +418,44 @@
         var bScore = b[compare];
 
         return aScore < bScore ? 1 : -1
+    }
+
+     function changeHistogram(values){
+        x = d3.scaleTime().domain([new Date(startTime), new Date(endTime)]).range([0, width]);
+
+         var histogram = d3.histogram()
+            .value(function(d) { return d; })   // I need to give the vector of value
+             .domain(x.domain())  // then the domain of the graphic
+            .thresholds(x.ticks(10)); // then the numbers of bins
+
+            var bins = histogram(values);
+
+            y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
+            yAxis.transition()
+            .duration(1000)
+            .call(d3.axisLeft(y).ticks(4));
+
+            xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks(4))
+
+            var u = svg.selectAll("rect")
+                    .data(bins);
+
+        // Manage the existing bars and eventually the new ones:
+            u
+            .enter()
+            .append("rect") // Add a new rect for each new elements
+            .merge(u) // get the already existing elements as well
+            .transition() // and apply changes to all of them
+            .duration(1000)
+              .attr("x", 1)
+              .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+              .attr("width", function(d) { return Math.max(x(d.x1) - x(d.x0) -1, 0); })
+              .attr("height", function(d) { return height - y(d.length); })
+              .style("fill", "blue")
+
+
+    // If less bar in the new histogram, I delete the ones not in use anymore
+         u.exit().remove()
     }
 
     </script>

@@ -213,10 +213,18 @@
            <div class="rest-info-title">Total Reviews: </div>
            <div class="rest-info-value" id="total-reviews"></div>
        </div>
-       <button onclick="displaySickReviews(selectedMarker.reviews, compareDates, 'reviews')">Sort By Date</button>
-       <button onclick="displaySickReviews(selectedMarker.reviews, compareLRScores, 'reviews')">Sort By LR Score</button>
-       <button onclick="displaySickReviews(selectedMarker.reviews, compareHSANScores, 'reviews')">Sort By HSAN Score</button>
-       
+<!--       <button onclick="displaySickReviews(selectedMarker.reviews, compareDates, 'reviews')">Sort By Date</button>-->
+<!--       <button onclick="displaySickReviews(selectedMarker.reviews, compareLRScores, 'reviews')">Sort By LR Score</button>-->
+<!--       <button onclick="displaySickReviews(selectedMarker.reviews, compareHSANScores, 'reviews')">Sort By HSAN Score</button>-->
+       <div class="rest-info">
+         <form style = "margin-top: 4px">
+              <select id="sort-by-select">
+                  <option selected="selected" value = "date">Sort By Date</option>
+                  <option value = "hsan">Sort By HSAN</option>
+                  <option value = "lr">Sort By LR</option>
+              </select>
+         </form>
+       </div>
        <div id="reviews"></div>
        <button onclick="openBusinessWindow()" style="float:right;">More Info</button>
    </div>
@@ -397,7 +405,7 @@
 
         $("#date-select").on("change", function() {
             var today = new Date();
-            var option = this.value;
+            let option = this.value;
             var date = new Date();
             $("#date-slider").slider("disable");
             if (option == 'week'){
@@ -417,6 +425,20 @@
                 date = new Date(startTime);
             }
             $("#date-slider").slider("values", [date.getTime()/1000, today.getTime()/1000]);
+        })
+
+        $("#sort-by-select").on("change", function() {
+            let option = this.value;
+
+            if(option == 'date'){
+                displaySickReviews(selectedMarker.reviews, compareDates, 'reviews');
+            }
+            else if(option == 'hsan'){
+                displaySickReviews(selectedMarker.reviews, compareHSANScores, 'reviews');
+            }
+            else{
+                displaySickReviews(selectedMarker.reviews, compareLRScores, 'reviews');
+            }
         })
     })
 
