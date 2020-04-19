@@ -236,7 +236,7 @@
       var map;
       var sickMin = Number.MAX_VALUE, sickMax = -Number.MAX_VALUE;
       var sickReviewBottomThreshold = 0.5;
-      var sickReviewTopThreshold = 0.8;
+      var sickReviewTopThreshold = 1.0;
       var sickRestaurantThreshold = 5;
       var scalingFactor = 3;
       var selectedMarker = null;
@@ -247,7 +247,7 @@
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
 
-      var startTime = (new Date(2020, 1, 1)).getTime();
+      var startTime = (new Date(2018, 1, 1)).getTime();
       var endTime = (new Date()).getTime();
 
       var margin = {top: 10, right: 30, bottom: 30, left: 40},
@@ -745,7 +745,7 @@
          var histogram = d3.histogram()
             .value(function(d) { return d; })   // I need to give the vector of value
              .domain(x.domain())  // then the domain of the graphic
-            .thresholds(x.ticks(10)); // then the numbers of bins
+            .thresholds(x.ticks(20)); // then the numbers of bins
 
         var bins = histogram(values);
 

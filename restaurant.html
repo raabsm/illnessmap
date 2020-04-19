@@ -120,13 +120,14 @@
             left: 50px;
             overflow: auto;
             float: right;
-            padding-right: 50px;
+            max-width:700px
         }
           #histogram{
-            position:absolute;
-            z-index:2;
-            bottom:10px;
-        }
+              position:fixed;
+              z-index:2;
+              bottom:10px;
+              right:5px;
+          }
 
       </style>
   </head>
@@ -319,6 +320,7 @@
             }
             else{
                  let reviewDiv = document.createElement('div');
+                 reviewDiv.id = reviews[i]['review_id'];
                  let url = reviews[i]['review_url'];
                  let date = getFormattedDate(new Date(reviews[i]['date_created']));
                  let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
@@ -331,34 +333,40 @@
                  }
                  let revTitle = document.createElement('a');
                  revTitle.className = 'rest_info_title';
-                 revTitle.setAttribute("style", "color:red; display:flex;");
+                 revTitle.setAttribute("style", "color:blue; display:flex;");
                  let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
                  revTitle.href = url;
                  revTitle.setAttribute('target', '_blank');
                  revTitle.appendChild(linkText);
                  reviewDiv.appendChild(revTitle);
 
-                 let sentenceIndicesToDisplay;
+                 let sickSentences = [];
 
                  if(hsan['sick_sentences'].length > 0){
-                     sentenceIndicesToDisplay = indicesOfSickSentences(hsan['sick_sentences'], reviews[i]['sentences']);
+                     sickSentences = indicesOfSickSentences(hsan['sick_sentences'], reviews[i]['sentences']);
                  }
                  else{
-                     sentenceIndicesToDisplay = topSickSentences(hsan['sentence_scores']);
+                     sickSentences = topSickSentences(hsan['sentence_scores']);
                  }
+                 let index_of_sick_sentence = 0;
 
-                 for(let j = 0; j < sentenceIndicesToDisplay.length; j++){
-                     let index = sentenceIndicesToDisplay[j];
+                 for(let j = 0; j < reviews[i]['sentences'].length; j++){
                      let sentenceInfo = document.createElement('div');
                      sentenceInfo.className = 'review-info';
 
                      let sentenceScore = document.createElement('div');
                      sentenceScore.className = "sentence-score";
-                     sentenceScore.textContent = hsan['sentence_scores'][index].toFixed(2);
+                     sentenceScore.textContent = hsan['sentence_scores'][j].toFixed(2);
 
                      let revText = document.createElement('div');
                      revText.className = 'review-text';
-                     revText.textContent = reviews[i]['sentences'][index];
+                     revText.textContent = reviews[i]['sentences'][j];
+
+                     if(index_of_sick_sentence != sickSentences.length && j == sickSentences[index_of_sick_sentence]){
+                         index_of_sick_sentence ++;
+                         sentenceScore.style = "color: red;"
+                         revText.style = "color: red";
+                     }
 
                      sentenceInfo.appendChild(sentenceScore);
                      sentenceInfo.appendChild(revText);
