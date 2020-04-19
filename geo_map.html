@@ -8,6 +8,8 @@
 
      <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
               rel = "stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet">
+<!--     <link rel="stylesheet" type="text/css" href="/static/rating.css">-->
 	<style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
@@ -34,7 +36,7 @@
       .text-box {
           position: absolute;
           padding: 10px;
-          background: rgba(0, 0, 0, 0.91);
+          background: rgba(255, 255, 255, 0.97);
           z-index: 900;
           color: #eaf2ff;
       }
@@ -49,7 +51,7 @@
       }
       .ui-slider-horizontal .ui-slider-range {
             top: 0;
-            background: navajowhite;
+            background: blue;
             height: 100%;
         }
       .ui-widget-content .ui-state-default {
@@ -58,6 +60,15 @@
           height: 10px;
       }
 
+      .fa-map-marker-alt:before{
+          color: blue;
+      }
+      .fa-globe-americas:before{
+          color: blue;
+      }
+      .fa-chart-line:before{
+          color:blue;
+      }
 
 
   #map {
@@ -82,29 +93,31 @@
 	  #data-label:after { content: ':' }
 
         #slider-box{
-            top: 50px;
-            left: 10px;
+            top: 0px;
+            left: 0px;
 
         }
         #rest-info-box{
-            top: 50px;
+            top: 0px;
             width: 500px;
-            right: 10px;
+            right: 0px;
             padding: 10px;
-            text-align: center;
+            text-align: left;
             display: none;
         }
 
         #rest-title{
-            font-weight: 400;
+            font-weight: bold;
             margin-bottom: 10px;
-            text-align: center;
+            text-align: left;
             font-size: 25px;
-            color: navajowhite;
+            color: black;
+            text-decoration: none;
         }
         .rest-info{
             line-height: 28px;
             text-align: left;
+            color: black
         }
         .review-info{
             line-height: 28px;
@@ -113,24 +126,22 @@
 
         .rest-info-title{
             display: inline-block;
-            color: white;
+            color: black;
         }
         .sentence-score{
             display: inline-block;
             position:absolute;
-            color: white;
+            color: red;
             float: left;
         }
 
-        .rest-info-value{
-            float: right;
-            display: inline-block;
-            color: #eee;
+        .rest-info-span{
+            padding-left: 13px;
         }
         .slider-title{
             line-height: 28px;
             text-align: left;
-            color: navajowhite;
+            color: black;
             font-size: 20px;
             display: inline-flex;
         }
@@ -142,6 +153,7 @@
             overflow: auto;
             float: right;
             padding-right: 50px;
+            color: black;
         }
         #histogram{
             position:absolute;
@@ -183,7 +195,7 @@
             <div id = "sick-rest-slider"></div>
 
             <div id = "radio-buttons">
-                <form action="">
+                <form action="" style="color:black;">
                     <input type="radio" name="classification" value="reg_total_score">LR
                     <input type="radio" name="classification" value="hsan_total_score">HSAN
                     <input type="radio" name="classification" value="union" checked="checked">Union
@@ -196,26 +208,23 @@
 	</div>
 
    <div id="rest-info-box" class="text-box">
-       <a href="#" target = "_blank" id="rest-title" style="text-align: center;"></a>
+       <a href="#" target = "_blank" id="rest-title"></a>
        <div class="rest-info">
-           <div class="rest-info-title">Address: </div>
-           <div class="rest-info-value" id="address"></div>
+           <div class="rest-info-title"><img id="rest-rating" style="padding-top:13px;"><span id="total-reviews" class="rest-info-span"></span></div>
        </div>
+       <p></p>
        <div class="rest-info">
-           <div class="rest-info-title">Rating: </div>
-           <div class="rest-info-value" id="rating"></div>
+           <i class="fas fa-map-marker-alt"></i>
+           <span id="address" class="rest-info-span"></span>
        </div>
         <div class="rest-info">
-           <div class="rest-info-title">Sick Review Count (within Slider bounds): </div>
-           <div class="rest-info-value" id="sick_score"></div>
+           <i class="fas fa-globe-americas"></i>
+           <span class="rest-info-span"><a href="#" target = "_blank" id="rest-website"></a></span>
        </div>
-       <div class="rest-info">
-           <div class="rest-info-title">Total Reviews: </div>
-           <div class="rest-info-value" id="total-reviews"></div>
+        <div class="rest-info">
+           <i class="fas fa-chart-line"></i>
+           <span id="sick-score" class="rest-info-span"></span>
        </div>
-<!--       <button onclick="displaySickReviews(selectedMarker.reviews, compareDates, 'reviews')">Sort By Date</button>-->
-<!--       <button onclick="displaySickReviews(selectedMarker.reviews, compareLRScores, 'reviews')">Sort By LR Score</button>-->
-<!--       <button onclick="displaySickReviews(selectedMarker.reviews, compareHSANScores, 'reviews')">Sort By HSAN Score</button>-->
        <div class="rest-info">
          <form style = "margin-top: 4px">
               <select id="sort-by-select">
@@ -269,13 +278,84 @@
       var x = d3.scaleTime().domain([new Date(startTime), new Date(endTime)]).range([0, width]);
       var xAxis = svg.append("g").attr("transform", "translate(0," + height + ")");
 
-
+      var starRatings = {
+          0.0: '0.png',
+          0.5: '0.png',
+          1.0: '1.png',
+          1.5: '1_half.png',
+          2.0: '2.png',
+          2.5: '2_half.png',
+          3.0: '3.png',
+          3.5: '3_half.png',
+          4.0: '4.png',
+          4.5: '4_half.png',
+          5.0: '5.png'
+      };
 
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
           zoom: 11,
           center: new google.maps.LatLng(40.75,-74.00),
-          mapTypeId: 'roadmap'
+            styles: [
+              {
+                "elementType": "labels",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              },
+              {
+                "featureType": "administrative",
+                "elementType": "geometry",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              },
+              {
+                "featureType": "administrative.land_parcel",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              },
+              {
+                "featureType": "administrative.neighborhood",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              },
+              {
+                "featureType": "poi",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              },
+              {
+                "featureType": "road",
+                "elementType": "labels.icon",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              },
+              {
+                "featureType": "transit",
+                "stylers": [
+                  {
+                    "visibility": "off"
+                  }
+                ]
+              }
+            ]
         });
         loadGeoJson();
         // google.maps.event.addDomListener(document.getElementById('map'), 'dblclick', function() {
@@ -531,6 +611,7 @@
                            address: business['address'],
                            total_review_count: business['review_count'],
                            url: business['url'],
+                           business_url: business['business_url'],
                            rating: business['rating'],
                        },
                        zIndex: 999
@@ -618,11 +699,17 @@
           document.getElementById('rest-title').href = restInfo.url;
           document.getElementById('rest-title').textContent = restInfo.name;
           document.getElementById('address').textContent = restInfo.address;
-          document.getElementById('rating').textContent = restInfo.rating;
-          document.getElementById('total-reviews').textContent = restInfo.total_review_count;
-          document.getElementById('sick_score').textContent = sickScore;
+          document.getElementById('rest-rating').src = '/images/yelp-ratings-large/' + getImgFromRating(restInfo.rating);
+          document.getElementById('total-reviews').textContent = restInfo.total_review_count + ' Reviews';
+          document.getElementById('rest-website').href = restInfo.business_url;
+          document.getElementById('rest-website').textContent = restInfo.business_url;
+          document.getElementById('sick-score').textContent = sickScore + ' Sick Reviews (within slider bounds)';
 
           displaySickReviews(marker.reviews, compareDates, 'reviews');
+    }
+
+    function getImgFromRating(rating){
+        return starRatings[Math.round(rating * 2) / 2];
     }
 
     function displaySickReviews(reviews, sortFunction, reviewsDiv){
@@ -827,4 +914,3 @@
     </script>
   </body>
 </html>
-
