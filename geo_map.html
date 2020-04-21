@@ -2,13 +2,16 @@
 <html>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+<!--    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>-->
     <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <script src = "https://d3js.org/d3.v4.js"></script>
 
      <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
               rel = "stylesheet">
     <link href="https://use.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 <!--     <link rel="stylesheet" type="text/css" href="/static/rating.css">-->
 	<style>
       /* Always set the map height explicitly to define the size of the div
@@ -38,10 +41,10 @@
           padding: 10px;
           background: rgba(255, 255, 255, 0.97);
           z-index: 900;
-          color: #eaf2ff;
+          color: #000000;
       }
       .ui-slider-horizontal {
-          height: 8px;
+          height: 15px;
           width: 200px;
           z-index: 999;
       }
@@ -56,8 +59,8 @@
         }
       .ui-widget-content .ui-state-default {
           background: red;
-          width: 3px;
-          height: 10px;
+          width: 7px;
+          height: 19px;
       }
 
       .fa-map-marker-alt:before{
@@ -69,6 +72,40 @@
       .fa-chart-line:before{
           color:blue;
       }
+      img{
+          vertical-align: sub;
+      }
+      .inner-container {
+        display: flex;
+          align-items: center;
+        width: 100%;
+    }
+      .inner-container > div{
+          /*margin-left: 5px;*/
+          margin-right: 5px;
+      }
+
+    .progress{
+        width: 100%;
+    }
+
+      .review-header{
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+      }
+      .review-header > div{
+          /*margin-left: 10px;*/
+          margin-right: 5px;
+      }
+      .review-header-label{
+          color: black;
+        }
+      .review-date{
+          margin-bottom: 5px;
+          margin-top: 5px;
+      }
+
 
 
   #map {
@@ -119,10 +156,7 @@
             text-align: left;
             color: black
         }
-        .review-info{
-            line-height: 28px;
-            display: flex
-        }
+
 
         .rest-info-title{
             display: inline-block;
@@ -144,6 +178,7 @@
             color: black;
             font-size: 20px;
             display: inline-flex;
+            font-weight: 400;
         }
         .review-text{
             position: relative;
@@ -151,7 +186,6 @@
             max-height: 100px;
             left: 50px;
             overflow: auto;
-            float: right;
             padding-right: 50px;
             color: black;
         }
@@ -160,6 +194,7 @@
             z-index:2;
             bottom:10px;
         }
+
 
     </style>
   </head>
@@ -178,7 +213,7 @@
 
             <div class="slider-title">Date Slider</div>
             <form id="select-form" style = "display: inline; float: right; margin-top: 4px">
-              <select id="date-select">
+              <select id="date-select" class="form-control form-control-sm" style="height: 20px;">
                   <option selected="selected" value = "custom">Custom</option>
                   <option value = "week">Last Week</option>
                   <option value = "month">Last Month</option>
@@ -194,23 +229,27 @@
             <div id="rest-slider-text" class="rest-info"></div>
             <div id = "sick-rest-slider"></div>
 
-            <div id = "radio-buttons">
-                <form action="" style="color:black;">
-                    <input type="radio" name="classification" value="reg_total_score">LR
-                    <input type="radio" name="classification" value="hsan_total_score">HSAN
-                    <input type="radio" name="classification" value="union" checked="checked">Union
-                </form>
+            <div id="radio-buttons" class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" style="margin-top:5px">
+                <label class="btn btn-secondary">
+                    <input type="radio" name="classification" value="reg_total_score" autocomplete="off">LR
+                </label>
+                 <label class="btn btn-secondary">
+                    <input type="radio" name="classification" value="hsan_total_score" autocomplete="off">HSAN
+                 </label>
+                 <label class="btn btn-secondary active">
+                    <input type="radio" name="classification" value="union" autocomplete="off" checked>Union
+                 </label>
             </div>
-        <button onclick="scaleUp()">Scale Up</button>
-        <button onclick="deselectMarker()">Deselect</button>
-        <div><button onclick="changeMap()" style="float:right;">Submit</button></div>
+          <div style="margin-top:5px"><button class="btn btn-primary btn-sm" onclick="scaleUp()">Scale Up</button></div>
+<!--        <button class="btn btn-primary btn-sm" onclick="deselectMarker()">Deselect</button>-->
+        <div><button class="btn btn-success btn-sm" onclick="changeMap()" style="float:right;">Submit</button></div>
 
 	</div>
 
    <div id="rest-info-box" class="text-box">
        <a href="#" target = "_blank" id="rest-title"></a>
        <div class="rest-info">
-           <div class="rest-info-title"><img id="rest-rating" style="padding-top:13px;"><span id="total-reviews" class="rest-info-span"></span></div>
+           <div class="rest-info-title"><img id="rest-rating"><span id="total-reviews" class="rest-info-span"></span></div>
        </div>
        <p></p>
        <div class="rest-info">
@@ -227,15 +266,39 @@
        </div>
        <div class="rest-info">
          <form style = "margin-top: 4px">
-              <select id="sort-by-select">
+              <select id="sort-by-select" class="form-control form-control-sm">
                   <option selected="selected" value = "date">Sort By Date</option>
                   <option value = "hsan">Sort By HSAN</option>
                   <option value = "lr">Sort By LR</option>
               </select>
          </form>
        </div>
-       <div id="reviews"></div>
-       <button onclick="openBusinessWindow()" style="float:right;">More Info</button>
+       <div id="reviews">
+           <div>
+               <div>02/02/2020</div>
+               <div class="review-header">
+                   <div class = "inner-container">
+                       <div>
+                           <img src="images/yelp-ratings-small/2.png">
+                       </div>
+                       <div>Yelp</div>
+                   </div>
+                   <div class="inner-container">
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">80</div>
+                       </div>
+                       <div>HSAN</div>
+                   </div>
+                   <div class="inner-container">
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">80</div>
+                       </div>
+                       <div>LR</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+       <button class="btn btn-primary btn-sm"  onclick="openBusinessWindow()" style="float:right;">More Info</button>
    </div>
 
   <div id="histogram"></div>
@@ -727,22 +790,95 @@
                  let url = reviews[i]['review_url'];
                  let date = getFormattedDate(new Date(reviews[i]['date_created']));
                  let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
-                 let hsanSickScore = reviews[i]['hsan_total_score'];
-                 if (hsanSickScore == 0){
-                     hsanSickScore = 'N/A'
-                 }
-                 else{
-                     hsanSickScore = hsanSickScore.toFixed(2);
-                 }
-                 let revTitle = document.createElement('a');
-                 revTitle.className = 'rest_info_title';
-                 revTitle.setAttribute("style", "color:navajowhite; display:flex;");
-                 let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
-                 revTitle.href = url;
-                 revTitle.setAttribute('target', '_blank');
-                 revTitle.appendChild(linkText);
+                 let hsanSickScore = reviews[i]['hsan_total_score'].toFixed(2);
 
-                 reviewDiv.appendChild(revTitle);
+                 let regPercentage = (reviews[i]['reg_total_score'] * 100);
+                 let hsanPercentage = (reviews[i]['hsan_total_score'] * 100);
+
+                 let reviewDate = document.createElement('div');
+                 reviewDate.className = 'review-date';
+                 reviewDate.textContent = date;
+                 reviewDiv.appendChild(reviewDate);
+
+                 let reviewHeader = document.createElement('div');
+                 reviewHeader.className = 'review-header';
+
+                 let container = document.createElement('div');
+                 container.className = "inner-container";
+                 let yelpDiv = document.createElement('div');
+                 let yelpImg = document.createElement('img');
+                 console.log(reviews[i]['review-rating']);
+                 yelpImg.src = "images/yelp-ratings-small/" + getImgFromRating(reviews[i]['review_rating']);
+                 yelpDiv.appendChild(yelpImg);
+                 container.appendChild(yelpDiv);
+
+                 let yelpText = document.createElement('div');
+                 yelpText.textContent= 'Yelp';
+                 container.appendChild(yelpText);
+
+                 reviewHeader.appendChild(container);
+
+                let container2 = document.createElement('div');
+                container2.className = 'inner-container';
+                let progressBar = document.createElement('div');
+                progressBar.className= 'progress';
+                let bar3 = document.createElement('div');
+                bar3.className = 'progress-bar bg-danger';
+                bar3.setAttribute('role', "progressbar");
+                bar3.setAttribute('aria-valuenow', "60");
+                bar3.setAttribute('aria-valuemin', "0");
+                bar3.setAttribute('aria-valuemax', "100");
+                bar3.setAttribute("style", "width: " + regPercentage + "%;");
+                bar3.textContent = regSickScore;
+
+                progressBar.appendChild(bar3);
+                let text = document.createElement('div');
+                text.textContent = 'LR';
+                container2.appendChild(progressBar);
+                container2.appendChild(text);
+                reviewHeader.appendChild(container2);
+
+                let container3 = document.createElement('div');
+                container3.className = 'inner-container';
+                let progressBar2 = document.createElement('div');
+                progressBar2.className = 'progress';
+                let bar2 = document.createElement('div');
+                bar2.className = 'progress-bar bg-danger';
+                bar2.setAttribute('role', "progressbar");
+                bar2.setAttribute('aria-valuenow', "60");
+                bar2.setAttribute('aria-valuemin', "0");
+                bar2.setAttribute('aria-valuemax', "100");
+                bar2.setAttribute("style", "width: " + hsanPercentage + "%;");
+                bar2.textContent = hsanSickScore;
+
+                progressBar2.appendChild(bar2);
+                let text2 = document.createElement('div');
+                text2.textContent = 'HSAN';
+                container3.appendChild(progressBar2);
+                container3.appendChild(text2);
+                reviewHeader.appendChild(container3);
+
+                reviewDiv.appendChild(reviewHeader);
+
+
+                 // if (hsanSickScore == 0){
+                 //     hsanSickScore = 'N/A'
+                 // }
+                 // else{
+                 //     hsanSickScore = hsanSickScore.toFixed(2);
+                 // }
+
+                 // let revTitle = document.createElement('a');
+                 // revTitle.className = 'rest_info_title';
+                 // revTitle.setAttribute("style", "color:navajowhite; display:flex;");
+                 // let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
+                 // revTitle.href = url;
+                 // revTitle.setAttribute('target', '_blank');
+                 // revTitle.appendChild(linkText);
+                 //
+                 // reviewDiv.appendChild(revTitle);
+
+
 
                  let sentenceIndicesToDisplay;
 
