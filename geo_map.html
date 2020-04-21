@@ -253,6 +253,10 @@
 	</div>
 
    <div id="rest-info-box" class="text-box">
+       <button type="button" class="close" aria-label="Close" onclick="deselectMarker()">
+           <span aria-hidden="true">&times;</span>
+       </button>
+
        <a href="#" target = "_blank" id="rest-title"></a>
        <div class="rest-info">
            <div class="rest-info-title"><img id="rest-rating"><span id="total-reviews" class="rest-info-span"></span></div>
@@ -281,7 +285,7 @@
        </div>
        <div id="reviews">
        </div>
-       <button class="btn btn-primary btn-sm"  onclick="openBusinessWindow()" style="float:right;">More Info</button>
+       <button class="btn btn-primary btn-sm"  onclick="openBusinessWindow()" style="float:right; margin-top:8px;">More Info</button>
    </div>
 
   <div id="histogram"></div>
