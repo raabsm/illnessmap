@@ -106,6 +106,12 @@
           margin-top: 5px;
       }
 
+      .review-div{
+          padding-bottom: 15px;
+          padding-top: 15px;
+          border-bottom-style: ridge;
+          border-bottom-width: 1px;
+      }
 
 
   #map {
@@ -265,7 +271,7 @@
            <span id="sick-score" class="rest-info-span"></span>
        </div>
        <div class="rest-info">
-         <form style = "margin-top: 4px">
+         <form style = "margin-top: 4px;">
               <select id="sort-by-select" class="form-control form-control-sm">
                   <option selected="selected" value = "date">Sort By Date</option>
                   <option value = "hsan">Sort By HSAN</option>
@@ -274,29 +280,6 @@
          </form>
        </div>
        <div id="reviews">
-           <div>
-               <div>02/02/2020</div>
-               <div class="review-header">
-                   <div class = "inner-container">
-                       <div>
-                           <img src="images/yelp-ratings-small/2.png">
-                       </div>
-                       <div>Yelp</div>
-                   </div>
-                   <div class="inner-container">
-                        <div class="progress">
-                            <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">80</div>
-                       </div>
-                       <div>HSAN</div>
-                   </div>
-                   <div class="inner-container">
-                        <div class="progress">
-                            <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">80</div>
-                       </div>
-                       <div>LR</div>
-                   </div>
-               </div>
-           </div>
        </div>
        <button class="btn btn-primary btn-sm"  onclick="openBusinessWindow()" style="float:right;">More Info</button>
    </div>
@@ -787,6 +770,7 @@
             else{
                  console.log(reviews[i]['review_id']);
                  let reviewDiv = document.createElement('div');
+                 reviewDiv.className = 'review-div';
                  let url = reviews[i]['review_url'];
                  let date = getFormattedDate(new Date(reviews[i]['date_created']));
                  let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
@@ -794,11 +778,6 @@
 
                  let regPercentage = (reviews[i]['reg_total_score'] * 100);
                  let hsanPercentage = (reviews[i]['hsan_total_score'] * 100);
-
-                 let reviewDate = document.createElement('div');
-                 reviewDate.className = 'review-date';
-                 reviewDate.textContent = date;
-                 reviewDiv.appendChild(reviewDate);
 
                  let reviewHeader = document.createElement('div');
                  reviewHeader.className = 'review-header';
@@ -813,7 +792,7 @@
                  container.appendChild(yelpDiv);
 
                  let yelpText = document.createElement('div');
-                 yelpText.textContent= 'Yelp';
+                 yelpText.textContent= date;
                  container.appendChild(yelpText);
 
                  reviewHeader.appendChild(container);
@@ -836,10 +815,7 @@
                 text.textContent = 'LR';
                 container2.appendChild(progressBar);
                 container2.appendChild(text);
-                reviewHeader.appendChild(container2);
 
-                let container3 = document.createElement('div');
-                container3.className = 'inner-container';
                 let progressBar2 = document.createElement('div');
                 progressBar2.className = 'progress';
                 let bar2 = document.createElement('div');
@@ -854,9 +830,9 @@
                 progressBar2.appendChild(bar2);
                 let text2 = document.createElement('div');
                 text2.textContent = 'HSAN';
-                container3.appendChild(progressBar2);
-                container3.appendChild(text2);
-                reviewHeader.appendChild(container3);
+                container2.appendChild(progressBar2);
+                container2.appendChild(text2);
+                reviewHeader.appendChild(container2);
 
                 reviewDiv.appendChild(reviewHeader);
 
