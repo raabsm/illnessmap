@@ -672,7 +672,7 @@
                     });
 
                     google.maps.event.addListener(marker, 'click', function() {
-                        updateClickBox(this, compareDates);
+                        updateClickBox(this);
                         if(selectedMarker != null){
                             makeNeutralIcon(selectedMarker);
                         }
@@ -737,7 +737,7 @@
           }
     }
 
-    function updateClickBox(marker, sortFunction){
+    function updateClickBox(marker){
           var restInfo = marker.rest_info;
           var sickScore = marker.sick_score;
           var box = document.getElementById('rest-info-box');
@@ -768,93 +768,31 @@
                 continue;
             }
             else{
-                 console.log(reviews[i]['review_id']);
-                 let reviewDiv = document.createElement('div');
-                 reviewDiv.className = 'review-div';
-                 let url = reviews[i]['review_url'];
-                 let date = getFormattedDate(new Date(reviews[i]['date_created']));
-                 let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
-                 let hsanSickScore = reviews[i]['hsan_total_score'].toFixed(2);
+                console.log(reviews[i]['review_id']);
+                let reviewDiv = document.createElement('div');
+                reviewDiv.className = 'review-div';
+                let date = getFormattedDate(new Date(reviews[i]['date_created']));
 
-                 let regPercentage = (reviews[i]['reg_total_score'] * 100);
-                 let hsanPercentage = (reviews[i]['hsan_total_score'] * 100);
+                let reviewHeader = document.createElement('div');
+                reviewHeader.className = 'review-header';
 
-                 let reviewHeader = document.createElement('div');
-                 reviewHeader.className = 'review-header';
+                let container = document.createElement('div');
+                container.className = "inner-container";
 
-                 let container = document.createElement('div');
-                 container.className = "inner-container";
-                 let yelpDiv = document.createElement('div');
-                 let yelpImg = document.createElement('img');
-                 console.log(reviews[i]['review-rating']);
-                 yelpImg.src = "images/yelp-ratings-small/" + getImgFromRating(reviews[i]['review_rating']);
-                 yelpDiv.appendChild(yelpImg);
-                 container.appendChild(yelpDiv);
+                container.appendChild(createYelpImg(reviews[i]['review_rating'], reviews[i]['review_url']));
+                container.appendChild(createTextElement(date));
+                reviewHeader.appendChild(container);
 
-                 let yelpText = document.createElement('div');
-                 yelpText.textContent= date;
-                 container.appendChild(yelpText);
+                container = document.createElement('div');
+                container.className = 'inner-container';
+                container.appendChild(createProgressElement(reviews[i]['reg_total_score']));
+                container.appendChild(createTextElement('LR'));
+                container.appendChild(createProgressElement(reviews[i]['hsan_total_score']));
+                container.appendChild(createTextElement('HSAN'));
 
-                 reviewHeader.appendChild(container);
-
-                let container2 = document.createElement('div');
-                container2.className = 'inner-container';
-                let progressBar = document.createElement('div');
-                progressBar.className= 'progress';
-                let bar3 = document.createElement('div');
-                bar3.className = 'progress-bar bg-danger';
-                bar3.setAttribute('role', "progressbar");
-                bar3.setAttribute('aria-valuenow', "60");
-                bar3.setAttribute('aria-valuemin', "0");
-                bar3.setAttribute('aria-valuemax', "100");
-                bar3.setAttribute("style", "width: " + regPercentage + "%;");
-                bar3.textContent = regSickScore;
-
-                progressBar.appendChild(bar3);
-                let text = document.createElement('div');
-                text.textContent = 'LR';
-                container2.appendChild(progressBar);
-                container2.appendChild(text);
-
-                let progressBar2 = document.createElement('div');
-                progressBar2.className = 'progress';
-                let bar2 = document.createElement('div');
-                bar2.className = 'progress-bar bg-danger';
-                bar2.setAttribute('role', "progressbar");
-                bar2.setAttribute('aria-valuenow', "60");
-                bar2.setAttribute('aria-valuemin', "0");
-                bar2.setAttribute('aria-valuemax', "100");
-                bar2.setAttribute("style", "width: " + hsanPercentage + "%;");
-                bar2.textContent = hsanSickScore;
-
-                progressBar2.appendChild(bar2);
-                let text2 = document.createElement('div');
-                text2.textContent = 'HSAN';
-                container2.appendChild(progressBar2);
-                container2.appendChild(text2);
-                reviewHeader.appendChild(container2);
+                reviewHeader.appendChild(container);
 
                 reviewDiv.appendChild(reviewHeader);
-
-
-                 // if (hsanSickScore == 0){
-                 //     hsanSickScore = 'N/A'
-                 // }
-                 // else{
-                 //     hsanSickScore = hsanSickScore.toFixed(2);
-                 // }
-
-                 // let revTitle = document.createElement('a');
-                 // revTitle.className = 'rest_info_title';
-                 // revTitle.setAttribute("style", "color:navajowhite; display:flex;");
-                 // let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
-                 // revTitle.href = url;
-                 // revTitle.setAttribute('target', '_blank');
-                 // revTitle.appendChild(linkText);
-                 //
-                 // reviewDiv.appendChild(revTitle);
-
-
 
                  let sentenceIndicesToDisplay;
 
@@ -886,7 +824,44 @@
             }
         }
 
+    }
 
+    function createProgressElement(sickScore){
+        let percentage = sickScore * 100;
+        let fixedDecimal = sickScore.toFixed(2);
+
+        let progressBar = document.createElement('div');
+        progressBar.className= 'progress';
+        let bar = document.createElement('div');
+        bar.className = 'progress-bar bg-danger';
+        bar.setAttribute('role', "progressbar");
+        bar.setAttribute('aria-valuenow', "60");
+        bar.setAttribute('aria-valuemin', "0");
+        bar.setAttribute('aria-valuemax', "100");
+        bar.setAttribute("style", "width: " + percentage + "%;");
+        bar.textContent = fixedDecimal;
+
+        progressBar.appendChild(bar);
+        return progressBar;
+    }
+
+    function createTextElement(content) {
+        let text = document.createElement('div');
+        text.textContent = content;
+        return text;
+    }
+
+    function createYelpImg(rating, url){
+         let yelpDiv = document.createElement('div');
+         let yelpLink = document.createElement('a');
+         let yelpImg = document.createElement('img');
+         yelpImg.src = "images/yelp-ratings-small/" + getImgFromRating(rating);
+         yelpLink.href =  url;
+         yelpLink.setAttribute("target", "_blank");
+         yelpLink.appendChild(yelpImg);
+         yelpDiv.appendChild(yelpLink);
+
+         return yelpDiv;
     }
 
     function indicesOfSickSentences(sickSentences, reviewSentences){
