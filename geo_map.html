@@ -598,12 +598,14 @@
         reviews.sort(sortFunction);
         var reviewHtml = document.getElementById(reviewsDiv);
         reviewHtml.innerHTML = "";
+        let counter = 0;
         for(var i = 0; i < reviews.length; i++){
             var hsan = reviews[i]['classification_hsan'];
             if(!("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
                 continue;
             }
             else{
+                counter++;
                 let reviewDiv = document.createElement('div');
                 reviewDiv.className = 'review-div';
                 let date = getFormattedDate(new Date(reviews[i]['date_created']));
@@ -656,10 +658,17 @@
                      sentenceInfo.appendChild(revText);
                      reviewDiv.appendChild(sentenceInfo);
                  }
+                if(counter > 3){
+                    reviewDiv.style.display = 'none';
+                }
                 reviewHtml.appendChild(reviewDiv);
             }
         }
-
+        if(counter > 3){
+            let etc = createTextElement('...');
+            etc.style = "text-align: center";
+            reviewHtml.appendChild(etc)
+        }
     }
 
     function createProgressElement(sickScore){
