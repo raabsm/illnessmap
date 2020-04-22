@@ -34,6 +34,7 @@ def make_app():
                     (r"/test", test),
                     (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/"}),
                     (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/images"}),
+                    (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/css/"})
                         ])
 
 

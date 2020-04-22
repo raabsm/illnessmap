@@ -1,169 +1,104 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+<!--    <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>-->
     <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-      <script src = "https://d3js.org/d3.v4.js"></script>
+    <script src = "https://d3js.org/d3.v4.js"></script>
 
      <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
               rel = "stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.13.0/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+      <link href="/css/styles.css" rel="stylesheet" type="text/css">
+
       <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      .nicebox {
-		position: absolute;
-		text-align: center;
-		font-family: "Roboto", "Arial", sans-serif;
-		font-size: 13px;
-		z-index: 5;
-		box-shadow: 0 4px 6px -4px #333;
-		padding: 5px 10px;
-		background: rgb(255,255,255);
-		background: linear-gradient(to bottom,rgba(255,255,255,1) 0%,rgba(245,245,245,1) 100%);
-		border: rgb(229, 229, 229) 1px solid;
-	  }
-	  .ui-slider-handle {
-		color: black;
-		font-size: 10px;
-		padding: 3px;
-		text-shadow: 0 1px 0 #FFFFFF;
-		text-decoration:none;
-        text-align:center;
-		}
-      .text-box {
-          position: absolute;
-          padding: 10px;
-          background: white;
-          z-index: 900;
-          color: #eaf2ff;
-      }
-      .ui-slider-horizontal {
-          height: 8px;
-          width: 300px;
-          z-index: 999;
-      }
-      .ui-widget-content {
-          background: white;
-          margin-bottom: 10px;
-      }
-      .ui-slider-horizontal .ui-slider-range {
-            top: 0;
-            background: black;
-            height: 100%;
-        }
-      .ui-widget-content .ui-state-default {
-          background: red;
-          width: 3px;
-          height: 10px;
-      }
-
-
-        #slider-box{
-            top: 50px;
-            right: 10px;
-
-        }
-        #rest-info-box{
-            top: 50px;
-            width: 500px;
-            right: 10px;
-            padding: 10px;
-            text-align: center;
-            display: none;
+        .ui-slider-horizontal {
+            width: 100%;
         }
 
-        #rest-title{
-            font-weight: 400;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 25px;
-            color: navajowhite;
-        }
-        .rest-info{
-            line-height: 28px;
-            text-align: left;
-            color:black;
-        }
-        .review-info{
-            line-height: 28px;
-            display: flex
-        }
-
-        .rest-info-title{
-            display: inline-block;
-            color: white;
-        }
-        .sentence-score{
-            display: inline-block;
-            position:absolute;
-            color: black;
-            float: left;
-        }
-
-        .rest-info-value{
-            float: right;
-            display: inline-block;
-            color: #eee;
-        }
-        .slider-title{
-            line-height: 28px;
-            text-align: left;
-            color: black;
-            font-size: 20px;
-            display: inline-flex;
-        }
-        .review-text{
-            position: relative;
-            text-align: left;
-            max-height: 100px;
-            left: 50px;
-            overflow: auto;
-            float: right;
-            max-width:700px
-        }
-          #histogram{
-              position:fixed;
-              z-index:2;
-              bottom:10px;
-              right:5px;
+          #info{
+              width:50%;
           }
-
       </style>
-  </head>
+
   <body onload="loadReviews()">
 
-     <div id=slider-box class="text-box">
+       <div id="slider-box-restaurant" class="text-box">
 
-        <div class="slider-title">Sick Review Slider</div>
+            <div class="slider-title">Sick Review Slider</div>
 
-        <div id="sick-slider-text" class="rest-info"></div>
-        <div id = "sick-review-slider"></div>
+            <div id="sick-slider-text" class="rest-info"></div>
+            <div id = "sick-review-slider"></div>
 
 
-        <div class="slider-title">Date Slider</div>
-        <form id="select-form" style = "display: inline; float: right; margin-top: 4px">
-          <select id="date-select">
-              <option selected="selected" value = "custom">Custom</option>
-              <option value = "week">Last Week</option>
-              <option value = "month">Last Month</option>
-              <option value = "6month">Last 6 Months</option>
-              <option value = "year">Last Year</option>
-          </select>
-        </form>
-        <div id="date-slider-text" class="rest-info"></div>
-        <div id = "date-slider"></div>
-
-        <div id = "radio-buttons">
-            <form action="" style="color:black;">
-                <input type="radio" name="classification" value="reg_total_score" onclick="updateExpandedReviews()">LR
-                <input type="radio" name="classification" value="hsan_total_score" onclick="updateExpandedReviews()">HSAN
-                <input type="radio" name="classification" value="union" checked="checked" onclick="updateExpandedReviews()">Union
+            <div class="slider-title">Date Slider</div>
+            <form id="select-form" style = "display: inline; float: right; margin-top: 4px">
+              <select id="date-select" class="form-control form-control-sm" style="height: 20px;">
+                  <option selected="selected" value = "custom">Custom</option>
+                  <option value = "week">Last Week</option>
+                  <option value = "month">Last Month</option>
+                  <option value = "6month">Last 6 Months</option>
+                  <option value = "year">Last Year</option>
+              </select>
             </form>
+            <div id="date-slider-text" class="rest-info"></div>
+            <div id = "date-slider"></div>
+
+            <div id="radio-buttons" class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" style="margin-top:5px">
+                <label class="btn btn-secondary">
+                    <input type="radio" name="classification" value="reg_total_score" onchange="updateExpandedReviews()" utocomplete="off">LR
+                </label>
+                 <label class="btn btn-secondary">
+                    <input type="radio" name="classification" value="hsan_total_score" onchange="updateExpandedReviews()" autocomplete="off">HSAN
+                 </label>
+                 <label class="btn btn-secondary active">
+                    <input type="radio" name="classification" value="union" autocomplete="off" onchange="updateExpandedReviews()" checked>Union
+                 </label>
+            </div>
+
+	</div>
+
+       <div id="info">
+
+       <a href="#" target = "_blank" id="rest-title"></a>
+       <div class="rest-info">
+           <div class="rest-info-title"><img id="rest-rating"><span id="total-reviews" class="rest-info-span"></span></div>
+       </div>
+       <p></p>
+       <div class="rest-info">
+           <i class="fas fa-map-marker-alt"></i>
+           <span id="address" class="rest-info-span"></span>
+       </div>
+       <div class="rest-info">
+           <i class="fas fa-phone"></i>
+           <span id="phone-number" class="rest-info-span"></span>
+       </div>
+        <div class="rest-info">
+           <i class="fas fa-globe-americas"></i>
+           <span class="rest-info-span"><a href="#" target = "_blank" id="rest-website"></a></span>
+       </div>
+        <div class="rest-info">
+           <i class="fas fa-chart-line"></i>
+           <span id="sick-score" class="rest-info-span"></span>
+       </div>
+           <p></p>
+       <div class="rest-info" style="width:25%;">
+         <form style = "margin-top: 4px;">
+              <select id="sort-by-select" class="form-control form-control-sm">
+                  <option selected="selected" value = "date">Sort By Date</option>
+                  <option value = "hsan">Sort By HSAN</option>
+                  <option value = "lr">Sort By LR</option>
+              </select>
+         </form>
+           <p></p>
+       </div>
+            <div id="expanded-reviews"></div>
         </div>
-     </div>
-     <div id="expanded-reviews"></div>
-      <div id="histogram"></div>
+      <div id="restaurant-histogram"></div>
 
     <script>
         var sickReviewBottomThreshold = {{ review_bottom_threshold }}
@@ -173,14 +108,28 @@
         var endTime = {{ end_time }}
         var classification = document.querySelector('input[name="classification"]:checked').value;
         var reviews = null;
+        var restInfo;
         var aboveThreshold = 0;
 
          var margin = {top: 10, right: 30, bottom: 30, left: 40},
                     width = 450 - margin.left - margin.right,
                     height = 100 - margin.top - margin.bottom;
+          var starRatings = {
+          0.0: '0.png',
+          0.5: '0.png',
+          1.0: '1.png',
+          1.5: '1_half.png',
+          2.0: '2.png',
+          2.5: '2_half.png',
+          3.0: '3.png',
+          3.5: '3_half.png',
+          4.0: '4.png',
+          4.5: '4_half.png',
+          5.0: '5.png'
+      };
 
         // append the svg object to the body of the page
-          var svg = d3.select("#histogram")
+          var svg = d3.select("#restaurant-histogram")
               .append("svg")
               .attr("width", width + margin.left + margin.right)
               .attr("height", height + margin.top + margin.bottom)
@@ -197,12 +146,41 @@
 
 
         function loadReviews(){
-            $.getJSON("/static/april_reviews_per_business.json", function(businesses){
-                reviews = businesses[businessId];
+            $.getJSON("/static/info_per_business.json", function(businesses){
+                reviews = businesses[businessId]['reviews'];
+                restInfo = businesses[businessId];
                 console.log(reviews);
                 updateExpandedReviews();
             })
         }
+
+        function updateInfo(){
+            document.getElementById('rest-title').href = restInfo.url;
+          document.getElementById('rest-title').textContent = restInfo.name;
+          document.getElementById('address').textContent = restInfo.address;
+          document.getElementById('rest-rating').src = '/images/yelp-ratings-large/' + getImgFromRating(restInfo.rating);
+          document.getElementById('total-reviews').textContent = restInfo.review_count + ' Reviews';
+          document.getElementById('rest-website').href = restInfo.business_url;
+          document.getElementById('rest-website').textContent = restInfo.business_url;
+          document.getElementById('sick-score').textContent = aboveThreshold + ' Sick Reviews (within slider bounds)';
+          document.getElementById('phone-number').textContent = formatPhoneNumber(restInfo.phone);
+
+        }
+
+        function formatPhoneNumber(phone){
+          if (!phone){
+              return '';
+          }
+          let cleaned = ('' + phone).replace(/\D/g, '')
+          let match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/)
+          if (match) {
+            var intlCode = (match[1] ? '+1 ' : '')
+            return [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('')
+          }
+          return null
+    }
+
+
         $(function (){
             $("#sick-review-slider").slider({
                 range: true,
@@ -307,38 +285,43 @@
         }
         displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews');
         changeHistogram(reviewsForHist);
+        updateInfo();
     }
 
     function displaySickReviews(reviews, sortFunction, reviewsDiv){
         reviews.sort(sortFunction);
         var reviewHtml = document.getElementById(reviewsDiv);
-        reviewHtml.innerHTML = "<h2>Sick Score: " + aboveThreshold + "</h2>";
+        reviewHtml.innerHTML = "";
         for(var i = 0; i < reviews.length; i++){
             var hsan = reviews[i]['classification_hsan'];
             if(!("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
                 continue;
             }
             else{
-                 let reviewDiv = document.createElement('div');
-                 reviewDiv.id = reviews[i]['review_id'];
-                 let url = reviews[i]['review_url'];
-                 let date = getFormattedDate(new Date(reviews[i]['date_created']));
-                 let regSickScore = reviews[i]['reg_total_score'].toFixed(2);
-                 let hsanSickScore = reviews[i]['hsan_total_score'];
-                 if (hsanSickScore == 0){
-                     hsanSickScore = 'N/A'
-                 }
-                 else{
-                     hsanSickScore = hsanSickScore.toFixed(2);
-                 }
-                 let revTitle = document.createElement('a');
-                 revTitle.className = 'rest_info_title';
-                 revTitle.setAttribute("style", "color:blue; display:flex;");
-                 let linkText = document.createTextNode(date + ' LR: ' + regSickScore + ' HSAN: ' + hsanSickScore);
-                 revTitle.href = url;
-                 revTitle.setAttribute('target', '_blank');
-                 revTitle.appendChild(linkText);
-                 reviewDiv.appendChild(revTitle);
+                    let reviewDiv = document.createElement('div');
+                reviewDiv.className = 'review-div';
+                let date = getFormattedDate(new Date(reviews[i]['date_created']));
+
+                let reviewHeader = document.createElement('div');
+                reviewHeader.className = 'review-header';
+
+                let container = document.createElement('div');
+                container.className = "inner-container";
+
+                container.appendChild(createYelpImg(reviews[i]['review_rating'], reviews[i]['review_url']));
+                container.appendChild(createTextElement(date));
+                reviewHeader.appendChild(container);
+
+                container = document.createElement('div');
+                container.className = 'inner-container';
+                container.appendChild(createProgressElement(reviews[i]['reg_total_score']));
+                container.appendChild(createTextElement('LR'));
+                container.appendChild(createProgressElement(reviews[i]['hsan_total_score']));
+                container.appendChild(createTextElement('HSAN'));
+
+                reviewHeader.appendChild(container);
+
+                reviewDiv.appendChild(reviewHeader);
 
                  let sickSentences = [];
 
@@ -378,6 +361,51 @@
 
 
     }
+
+
+    function createProgressElement(sickScore){
+        let percentage = sickScore * 100;
+        let fixedDecimal = sickScore.toFixed(2);
+
+        let progressBar = document.createElement('div');
+        progressBar.className= 'progress';
+        let bar = document.createElement('div');
+        bar.className = 'progress-bar bg-danger';
+        bar.setAttribute('role', "progressbar");
+        bar.setAttribute('aria-valuenow', "60");
+        bar.setAttribute('aria-valuemin', "0");
+        bar.setAttribute('aria-valuemax', "100");
+        bar.setAttribute("style", "width: " + percentage + "%;");
+        bar.textContent = fixedDecimal;
+
+        progressBar.appendChild(bar);
+        return progressBar;
+    }
+
+    function createTextElement(content) {
+        let text = document.createElement('div');
+        text.textContent = content;
+        return text;
+    }
+
+    function createYelpImg(rating, url){
+         let yelpDiv = document.createElement('div');
+         let yelpLink = document.createElement('a');
+         let yelpImg = document.createElement('img');
+         yelpImg.src = "images/yelp-ratings-small/" + getImgFromRating(rating);
+         yelpLink.href =  url;
+         yelpLink.setAttribute("target", "_blank");
+         yelpLink.appendChild(yelpImg);
+         yelpDiv.appendChild(yelpLink);
+
+         return yelpDiv;
+    }
+
+    function getImgFromRating(rating){
+        return starRatings[Math.round(rating * 2) / 2];
+    }
+
+
 
     function indicesOfSickSentences(sickSentences, reviewSentences){
         let indices = [];
