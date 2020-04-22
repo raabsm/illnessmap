@@ -4,7 +4,7 @@
     font-family: "Roboto", "Arial", sans-serif;
     font-size: 13px;
     z-index: 5;
-    box-shadow: 0 4px 6px -4px #333;
+    box-shadow: 0px 0px 6px -1px #333;
     padding: 5px 10px;
     background: rgb(255,255,255);
     background: linear-gradient(to bottom,rgba(255,255,255,1) 0%,rgba(245,245,245,1) 100%);
@@ -24,13 +24,16 @@
   background: rgba(255, 255, 255, 0.97);
   z-index: 900;
   color: #000000;
-    box-shadow: -3px 4px 6px -4px #333
+    box-shadow: 0px 0px 6px -1px #333
 }
 
 .ui-slider-horizontal{
     width: 200px;
     height: 15px;
     z-index: 999;
+}
+svg:not(:root){
+    font-weight: bold;
 }
 
 .ui-widget-content {
@@ -124,9 +127,8 @@ html, body {
 #data-label:after { content: ':' }
 
 #slider-box{
-    top: 0px;
-    left: 0px;
-    box-shadow: 3px 5px 6px -4px #333;
+    top: 10px;
+    left: 10px;
 }
 #slider-box-restaurant{
     top:0px;
@@ -134,9 +136,9 @@ html, body {
     width:30%;
 }
 #rest-info-box{
-    top: 0px;
+    top: 10px;
     width: 500px;
-    right: 0px;
+    right: 10px;
     padding: 10px;
     text-align: left;
     display: none;

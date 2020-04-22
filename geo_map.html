@@ -123,7 +123,7 @@
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
 
-      var startTime = (new Date(2018, 1, 1)).getTime();
+      var startTime = (new Date(2019, 1, 1)).getTime();
       var endTime = (new Date()).getTime();
 
       var margin = {top: 10, right: 30, bottom: 30, left: 40},
@@ -223,6 +223,76 @@
                 ]
               }
             ]
+//            styles: [
+//   {
+//     "featureType": "administrative.land_parcel",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "administrative.neighborhood",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi",
+//     "elementType": "labels.text",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "poi.business",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road",
+//     "elementType": "labels",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "road",
+//     "elementType": "labels.icon",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "transit",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   },
+//   {
+//     "featureType": "water",
+//     "elementType": "labels.text",
+//     "stylers": [
+//       {
+//         "visibility": "off"
+//       }
+//     ]
+//   }
+// ]
         });
         loadGeoJson();
         // google.maps.event.addDomListener(document.getElementById('map'), 'dblclick', function() {
@@ -315,7 +385,7 @@
             }
 		})
 
-        let sliderStartTime = new Date(2005, 8, 2).getTime();
+        let sliderStartTime = new Date(2019, 1, 1).getTime();
 
         $("#date-slider").slider({
             range: true,
@@ -402,7 +472,7 @@
       }
 
     function loadRestaurants(){
-        xhr = $.getJSON("/static/march_zipcode_sick_reviews.json", function(zip_codes){
+        xhr = $.getJSON("/static/2019_sick_reviews.json", function(zip_codes){
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
             for(var zip in zip_codes){

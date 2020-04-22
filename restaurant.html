@@ -109,6 +109,7 @@
         var endTime = {{ end_time }}
         var classification = document.querySelector('input[name="classification"]:checked').value;
         var reviews = null;
+        var reviewsToShow = [];
         var restInfo;
         var aboveThreshold = 0;
 
@@ -243,6 +244,20 @@
                 }
                 $("#date-slider").slider("values", [date.getTime()/1000, today.getTime()/1000]);
             })
+
+             $("#sort-by-select").on("change", function() {
+                let option = this.value;
+
+                if(option == 'date'){
+                    displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews' );
+                }
+                else if(option == 'hsan'){
+                    displaySickReviews(reviewsToShow, compareHSANScores, 'expanded-reviews');
+                }
+                else{
+                    displaySickReviews(reviewsToShow, compareLRScores, 'expanded-reviews');
+                }
+            })
         })
 
         function getFormattedDate(date) {
@@ -261,7 +276,7 @@
         reviewsForHist = [];
         classification = document.querySelector('input[name="classification"]:checked').value;
         aboveThreshold = 0;
-        let reviewsToShow = [];
+        reviewsToShow = [];
         for(let i = 0; i < reviews.length; i++){
             let reviewScore = 0;
            if(classification == 'union'){
