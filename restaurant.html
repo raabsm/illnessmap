@@ -148,10 +148,9 @@
 
 
         function loadReviews(){
-            $.getJSON("/static/info_per_business.json", function(businesses){
-                reviews = businesses[businessId]['reviews'];
-                restInfo = businesses[businessId];
-                console.log(reviews);
+            $.getJSON("/get_restaurant_info", {'business_id': businessId}, function(info){
+                restInfo = info;
+                reviews = restInfo['reviews'];
                 updateExpandedReviews();
             })
         }

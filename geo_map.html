@@ -481,11 +481,12 @@
         xhr = $.getJSON("/static/2019_sick_reviews.json", function(zip_codes){
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
+
             for(var zip in zip_codes){
                 let reviewDatesPerZip = [];
                 businesses = zip_codes[zip];
                 var zip_sick_count = 0;
-                businesses.forEach(function (business){    
+                businesses.forEach(function (business){
                    let latlng = new google.maps.LatLng(business['lat-long'][0],
                            business['lat-long'][1]);
 
@@ -609,6 +610,7 @@
             }
             xhr = null;
             changeHistogram(reviewsForHist);
+            console.log(counter);
     	}).fail(function (jqxhr, status, error) {
                 console.log('error', status, error) }
             );
