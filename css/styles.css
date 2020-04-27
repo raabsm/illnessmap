@@ -116,14 +116,17 @@ html, body {
 }
 #data-box {
     top: 10px;
-    left: 500px;
-    height: 45px;
-    line-height: 45px;
-    display: none;
+    left: 280px;
+    display: table;
+    text-align: left;
+    font-size: 8px;
 }
 
-#data-value { font-size: 2.0em; font-weight: bold }
-#data-label { font-size: 2.0em; font-weight: normal; padding-right: 10px; }
+.data-value { font-size: 2.0em; font-weight: bold; display: table-cell}
+.data-label { font-size: 2.0em; font-weight: normal; padding-right: 10px; display:table-cell}
+.table-row{
+    display: table-row;
+}
 #data-label:after { content: ':' }
 
 #slider-box{

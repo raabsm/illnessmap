@@ -17,8 +17,14 @@
     <link rel="stylesheet" type="text/css" href="/css/styles.css">
   </head>
    <div id="data-box" class="nicebox">
-      <label id="data-label" for="data-value"></label>
-      <span id="data-value"></span>
+       <div class="table-row">
+          <label id="mouseover-type" class="data-label" for="mouseover-name"></label>
+          <span id="mouseover-name" class="data-value"></span>
+       </div>
+       <div class="table-row">
+          <label class="data-label" for="sick_score">Sick Score:</label>
+          <span id=sick_score class="data-value"></span>
+       </div>
     </div>
 
     <div id=slider-box class="text-box">
@@ -556,7 +562,7 @@
                    })
 
                    google.maps.event.addListener(marker, 'mouseover', function() {
-                        updateMouseoverBox(this.rest_info.name, this.sick_score);
+                        updateMouseoverBox('Restaurant Name:', this.rest_info.name, this.sick_score);
 
                         var icon = this.icon;
                         icon.scale = this.normal_icon.scale + 3;
@@ -576,7 +582,7 @@
                        if(zipFeature['over']){
                            var feature = zipFeature['feature'];
                            var sickScoreString = feature.getProperty('sick_score');
-                           updateMouseoverBox(feature.getProperty('postalcode'), sickScoreString);
+                           updateMouseoverBox('Zip Code:', feature.getProperty('postalcode'), sickScoreString);
                        }
 
                        if(selectedMarker!== this){
@@ -878,10 +884,10 @@
     
     }
 
-    function updateMouseoverBox(dataLabel, dataValue) {
-          document.getElementById('data-label').textContent = dataLabel;
-          document.getElementById('data-value').textContent = dataValue;
-          document.getElementById('data-box').style.display = 'block';
+    function updateMouseoverBox(restOrZip, name, sickScore) {
+          document.getElementById('mouseover-type').textContent = restOrZip;
+          document.getElementById('mouseover-name').textContent = name;
+          document.getElementById('sick_score').textContent = sickScore;
     }
         
     function mouseInToRegion(event) {
@@ -890,7 +896,7 @@
         zipFeature['over'] = true;
 		
 		var sickScoreString = event.feature.getProperty('sick_score');
-		updateMouseoverBox(event.feature.getProperty('postalcode'), sickScoreString);
+		updateMouseoverBox('Zip Code:', event.feature.getProperty('postalcode'), sickScoreString);
 		if(event.feature.getProperty('review_dates')) {
             changeHistogram(event.feature.getProperty('review_dates'));
         }
