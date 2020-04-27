@@ -728,16 +728,8 @@
                      sentenceInfo.appendChild(revText);
                      reviewDiv.appendChild(sentenceInfo);
                  }
-                if(counter > 3){
-                    reviewDiv.style.display = 'none';
-                }
                 reviewHtml.appendChild(reviewDiv);
             }
-        }
-        if(counter > 3){
-            let etc = createTextElement('...');
-            etc.style = "text-align: center";
-            reviewHtml.appendChild(etc)
         }
     }
 
