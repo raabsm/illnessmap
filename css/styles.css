@@ -166,10 +166,14 @@ html, body {
     display: inline-block;
     color: black;
 }
-.sentence-score{
+.sentence-score-black{
     /*display: inline-block;*/
     /*position:absolute;*/
     /*float: left;*/
+    color: black;
+}
+.sentence-score-red{
+    color:red;
 }
 
 .rest-info-span{
@@ -183,13 +187,21 @@ html, body {
     display: inline-flex;
     font-weight: 400;
 }
-.review-text{
+.sentence-text-black{
     position: relative;
     text-align: left;
     max-height: 100px;
     overflow: auto;
     color: black;
 }
+.sentence-text-red{
+    position: relative;
+    text-align: left;
+    max-height: 100px;
+    overflow: auto;
+    color: red;
+}
+
 #histogram{
     position:absolute;
     z-index:2;
@@ -203,13 +215,13 @@ html, body {
     right: 10px;
 }
 
-.review-info{
+.sentence-info{
     display: flex;
 }
 
-.review-info > div{
+.sentence-info > div{
   /*margin-left: 10px;*/
-  margin-right: 15px;
+    margin-right: 15px;
     margin-top: 10px;
 }
 
