@@ -125,6 +125,7 @@
       var xhr = null;
       var classification = 'union';
       var allReviewsForSelectedMarker = null;
+      var zipSet = new Set();
 
       var zipFeature = {'feature': null, 'over': false};
       var markers = [];
@@ -229,85 +230,8 @@
                 ]
               }
             ]
-//            styles: [
-//   {
-//     "featureType": "administrative.land_parcel",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "administrative.neighborhood",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "poi",
-//     "elementType": "labels.text",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "poi.business",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "road",
-//     "elementType": "labels",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "road",
-//     "elementType": "labels.icon",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "transit",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   },
-//   {
-//     "featureType": "water",
-//     "elementType": "labels.text",
-//     "stylers": [
-//       {
-//         "visibility": "off"
-//       }
-//     ]
-//   }
-// ]
         });
         loadGeoJson();
-        // google.maps.event.addDomListener(document.getElementById('map'), 'dblclick', function() {
-        //     document.getElementById('rest-info-box').style.display = 'none';
-        //     if(selectedMarker != null){
-        //         makeNeutralIcon(selectedMarker, 5);
-        //         selectedMarker = null;
-        //     }
-        // });
 
         map.data.setStyle(styleFeature);
         map.data.addListener('mouseover', mouseInToRegion);
@@ -358,7 +282,7 @@
     }
 
     function changeMap(){
-          reviewsForHist = [];
+        reviewsForHist = [];
         classification = document.querySelector('input[name="classification"]:checked').value;
         if(xhr)
             xhr.abort();
@@ -372,6 +296,11 @@
         if(selectedMarker != null){
             markers.push(selectedMarker);
         }
+        zipSet = new Set();
+        // map.data.forEach(function(feature){
+        //     feature.setProperty('sick_score', 0);
+        //     feature.setProperty('review_dates', [])
+        // })
         loadRestaurants();
     }
 
@@ -478,19 +407,22 @@
       }
 
     function loadRestaurants(){
-        xhr = $.getJSON("/static/2019_sick_reviews.json", function(zip_codes){
+        xhr = $.getJSON("/get_reviews", function(businesses){
             sickMin = Number.MAX_VALUE;
             sickMax = -Number.MAX_VALUE;
-
-            for(var zip in zip_codes){
-                let reviewDatesPerZip = [];
-                businesses = zip_codes[zip];
-                var zip_sick_count = 0;
-                businesses.forEach(function (business){
+             businesses.forEach(function (business){
                    let latlng = new google.maps.LatLng(business['lat-long'][0],
                            business['lat-long'][1]);
-
+                   // let feature = map.data.getFeatureById(zip);
+                   //  if(feature === undefined){
+                   // // console.log("undefined");
+                   //  }
+                   //  else{
+                   //      feature.getProperty('test');
+                   //      feature.setProperty('test', 0);
+                   //  }
                    let reviews = [];
+                   let restReviewDates = [];
 
                    let aboveThreshold = 0;
                    for(var i = 0; i<business['reviews'].length; i++) {
@@ -511,15 +443,15 @@
                            continue;
                        } else {
                            reviews.push(business['reviews'][i]);
-                           reviewsForHist.push(new Date(reviewTime));
-                           reviewDatesPerZip.push(new Date(reviewTime));
+                           let reviewDate = new Date(reviewTime)
+                           reviewsForHist.push(reviewDate);
+                           restReviewDates.push(reviewDate);
                            aboveThreshold += 1;
                        }
                    }
-                   zip_sick_count += aboveThreshold;
 
-                   if(selectedMarker != null && selectedMarker.rest_info.id == business['business_id']){
-                       console.log("ran if statement on", selectedMarker.rest_info.name);
+                   if(selectedMarker != null && selectedMarker.rest_info.id == business['_id']){
+                       console.log("ran if statement on", selectedMarker.rest_info.id);
                        selectedMarker.normal_icon.scale = aboveThreshold/scalingFactor;
                        selectedMarker.reviews = reviews;
                        selectedMarker.rest_info.total_review_count = business['review_count'];
@@ -527,6 +459,35 @@
                        selectedMarker.sick_score = aboveThreshold;
                        updateClickBox(selectedMarker, compareDates);
                        return;
+                   }
+
+                   let feature = map.data.getFeatureById(business['zip_code']);
+                   if(feature){
+                       let zip_sick_count = 0;
+                       let zipReviewDates = feature.getProperty('review_dates');
+
+                       if(zipSet.has(business['zip_code'])){
+                           zip_sick_count = feature.getProperty('sick_score');
+                       }
+                       else{
+                           zipSet.add(business['zip_code']);
+                           zipReviewDates = [];
+
+                       }
+                       if(zip_sick_count > sickMax){
+                           sickMax = zip_sick_count;
+                        }
+                        if(zip_sick_count < sickMin){
+                            sickMin = zip_sick_count;
+                        }
+                       feature.setProperty('sick_score', zip_sick_count + aboveThreshold);
+                        if(zipReviewDates){
+                            feature.setProperty('review_dates', zipReviewDates.concat(restReviewDates));
+                        }
+                        else{
+                            feature.setProperty('review_dates', restReviewDates);
+                        }
+
                    }
 
                    if(aboveThreshold < sickRestaurantThreshold){
@@ -551,7 +512,7 @@
                        reviews: reviews,
                        rest_info:{
                            name: business['name'],
-                           id: business['business_id'],
+                           id: business['_id'],
                            address: business['address'],
                            total_review_count: business['review_count'],
                            url: business['url'],
@@ -592,22 +553,6 @@
                    });  
                    markers.push(marker);
                 })
-
-                if(zip_sick_count > sickMax){
-                    sickMax = zip_sick_count;
-                }
-                if(zip_sick_count < sickMin){
-                    sickMin = zip_sick_count;
-                }
-                var feature = map.data.getFeatureById(zip);
-                if(feature === undefined){
-                   // console.log("undefined");
-                }
-                else{
-                    feature.setProperty('sick_score', zip_sick_count);
-                    feature.setProperty('review_dates', reviewDatesPerZip);
-                }
-            }
             xhr = null;
             changeHistogram(reviewsForHist);
     	}).fail(function (jqxhr, status, error) {
@@ -866,6 +811,7 @@
     }
 
     function styleFeature(feature) {
+          console.log(feature.getProperty('postalcode'));
         var normalizedFillOpacity = (feature.getProperty('sick_score') - sickMin) /
             (sickMax-sickMin);
        // normalizedFillOpacity = 1 - normalizedFillOpacity;
