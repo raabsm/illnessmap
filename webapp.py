@@ -74,7 +74,8 @@ def make_app():
         (r"/get_restaurant_info", GetRestuarantInfo),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/"}),
         (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/images"}),
-        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/css/"})
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/css/"}),
+        (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/js/"}),
     ])
 
 
