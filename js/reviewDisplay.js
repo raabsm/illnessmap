@@ -78,7 +78,6 @@ var reviewDisplay = function(){
 
     function displaySickSentences(hsan, sentences){
          let sickSentenceIndices = sentencesAboveThreshold(hsan['sentence_scores'], 0.5);
-         console.log(sickSentenceIndices);
          let sentencesDiv = document.createElement('div');
 
          for(let i = 0; i < sickSentenceIndices.length; i++){
@@ -170,9 +169,7 @@ var reviewDisplay = function(){
         let maxIndex = 0;
 
         for(let i = 0; i< sentenceScores.length; i++){
-            console.log(sentenceScores[i], threshold);
             if (sentenceScores[i] >= threshold){
-                console.log('ran if');
                 indices.push(i);
             }
             else if (sentenceScores[i] > maxScore){
@@ -181,7 +178,6 @@ var reviewDisplay = function(){
             }
         }
         if (indices.length > 0){
-            console.log('indices', indices);
             return indices;
         }
         else{
