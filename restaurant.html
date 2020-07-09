@@ -13,7 +13,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-      <link href="/css/styles.css" rel="stylesheet" type="text/css">
+    <link href="/css/styles.css" rel="stylesheet" type="text/css">
+    <script src = "/js/histogram.js"></script>
+    <script src = "/js/reviewDisplay.js"></script>
 
       <style>
         .ui-slider-horizontal {
@@ -113,9 +115,11 @@
         var restInfo;
         var aboveThreshold = 0;
 
-         var margin = {top: 10, right: 30, bottom: 30, left: 40},
+         let margin = {top: 10, right: 30, bottom: 30, left: 40},
                     width = 450 - margin.left - margin.right,
                     height = 100 - margin.top - margin.bottom;
+        var dateHistogram = new Histogram('#restaurant-histogram', margin, height, width, 20, 4);
+
           var starRatings = {
           0.0: '0.png',
           0.5: '0.png',
@@ -131,22 +135,6 @@
       };
 
         // append the svg object to the body of the page
-          var svg = d3.select("#restaurant-histogram")
-              .append("svg")
-              .attr("width", width + margin.left + margin.right)
-              .attr("height", height + margin.top + margin.bottom)
-              .append("g")
-              .attr("transform",
-                  "translate(" + margin.left + "," + margin.top + ")");
-          var reviewsForHist = [];
-          var y = d3.scaleLinear().range([height, 0]);
-          var yAxis = svg.append("g");
-
-          var x = d3.scaleTime().domain([new Date(startTime), new Date(endTime)]).range([0, width]);
-          var xAxis = svg.append("g").attr("transform", "translate(0," + height + ")");
-
-
-
         function loadReviews(){
             $.getJSON("/get_restaurant_info", {'business_id': businessId}, function(info){
                 restInfo = info;
@@ -159,7 +147,7 @@
             document.getElementById('rest-title').href = restInfo.url;
           document.getElementById('rest-title').textContent = restInfo.name;
           document.getElementById('address').textContent = restInfo.address;
-          document.getElementById('rest-rating').src = '/images/yelp-ratings-large/' + getImgFromRating(restInfo.rating);
+          document.getElementById('rest-rating').src = yelpImages.getLargeImgFromRating(restInfo.rating);
           document.getElementById('total-reviews').textContent = restInfo.review_count + ' Reviews';
           document.getElementById('rest-website').href = restInfo.business_url;
           document.getElementById('rest-website').textContent = restInfo.business_url;
@@ -248,13 +236,13 @@
                 let option = this.value;
 
                 if(option == 'date'){
-                    displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews' );
+                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'date_created', true);
                 }
                 else if(option == 'hsan'){
-                    displaySickReviews(reviewsToShow, compareHSANScores, 'expanded-reviews');
+                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'hsan_total_score', true);
                 }
                 else{
-                    displaySickReviews(reviewsToShow, compareLRScores, 'expanded-reviews');
+                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'reg_total_score', true);
                 }
             })
         })
@@ -298,215 +286,9 @@
                reviewsToShow.push(reviews[i]);
            }
         }
-        displaySickReviews(reviewsToShow, compareDates, 'expanded-reviews');
-        changeHistogram(reviewsForHist);
+        reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'date_created', true);
+        dateHistogram.changeHistogram(reviewsForHist, new Date(startTime), new Date(endTime));
         updateInfo();
-    }
-
-    function displaySickReviews(reviews, sortFunction, reviewsDiv){
-        reviews.sort(sortFunction);
-        var reviewHtml = document.getElementById(reviewsDiv);
-        reviewHtml.innerHTML = "";
-        for(var i = 0; i < reviews.length; i++){
-            var hsan = reviews[i]['classification_hsan'];
-            if(!("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
-                continue;
-            }
-            else{
-                    let reviewDiv = document.createElement('div');
-                reviewDiv.className = 'review-div';
-                let date = getFormattedDate(new Date(reviews[i]['date_created']));
-
-                let reviewHeader = document.createElement('div');
-                reviewHeader.className = 'review-header';
-
-                let container = document.createElement('div');
-                container.className = "inner-container";
-
-                container.appendChild(createYelpImg(reviews[i]['review_rating'], reviews[i]['review_url']));
-                container.appendChild(createTextElement(date));
-                reviewHeader.appendChild(container);
-
-                container = document.createElement('div');
-                container.className = 'inner-container';
-                container.appendChild(createProgressElement(reviews[i]['reg_total_score']));
-                container.appendChild(createTextElement('LR'));
-                container.appendChild(createProgressElement(reviews[i]['hsan_total_score']));
-                container.appendChild(createTextElement('HSAN'));
-
-                reviewHeader.appendChild(container);
-
-                reviewDiv.appendChild(reviewHeader);
-
-                 let sickSentences = [];
-
-                 if(hsan['sick_sentences'].length > 0){
-                     sickSentences = indicesOfSickSentences(hsan['sick_sentences'], reviews[i]['sentences']);
-                 }
-                 else{
-                     sickSentences = topSickSentences(hsan['sentence_scores']);
-                 }
-                 let index_of_sick_sentence = 0;
-
-                 for(let j = 0; j < reviews[i]['sentences'].length; j++){
-                     let sentenceInfo = document.createElement('div');
-                     sentenceInfo.className = 'review-info';
-
-                     let sentenceScore = document.createElement('div');
-                     sentenceScore.className = "sentence-score";
-                     sentenceScore.textContent = hsan['sentence_scores'][j].toFixed(2);
-
-                     let revText = document.createElement('div');
-                     revText.className = 'review-text';
-                     revText.textContent = reviews[i]['sentences'][j];
-
-                     if(index_of_sick_sentence != sickSentences.length && j == sickSentences[index_of_sick_sentence]){
-                         index_of_sick_sentence ++;
-                         sentenceScore.style = "color: red;"
-                         revText.style = "color: red";
-                     }
-
-                     sentenceInfo.appendChild(sentenceScore);
-                     sentenceInfo.appendChild(revText);
-                     reviewDiv.appendChild(sentenceInfo);
-                 }
-                reviewHtml.appendChild(reviewDiv);
-            }
-        }
-
-
-    }
-
-
-    function createProgressElement(sickScore){
-        let percentage = sickScore * 100;
-        let fixedDecimal = sickScore.toFixed(2);
-
-        let progressBar = document.createElement('div');
-        progressBar.className= 'progress';
-        let bar = document.createElement('div');
-        bar.className = 'progress-bar bg-danger';
-        bar.setAttribute('role', "progressbar");
-        bar.setAttribute('aria-valuenow', "60");
-        bar.setAttribute('aria-valuemin', "0");
-        bar.setAttribute('aria-valuemax', "100");
-        bar.setAttribute("style", "width: " + percentage + "%;");
-        bar.textContent = fixedDecimal;
-
-        progressBar.appendChild(bar);
-        return progressBar;
-    }
-
-    function createTextElement(content) {
-        let text = document.createElement('div');
-        text.textContent = content;
-        return text;
-    }
-
-    function createYelpImg(rating, url){
-         let yelpDiv = document.createElement('div');
-         let yelpLink = document.createElement('a');
-         let yelpImg = document.createElement('img');
-         yelpImg.src = "images/yelp-ratings-small/" + getImgFromRating(rating);
-         yelpLink.href =  url;
-         yelpLink.setAttribute("target", "_blank");
-         yelpLink.appendChild(yelpImg);
-         yelpDiv.appendChild(yelpLink);
-
-         return yelpDiv;
-    }
-
-    function getImgFromRating(rating){
-        return starRatings[Math.round(rating * 2) / 2];
-    }
-
-
-
-    function indicesOfSickSentences(sickSentences, reviewSentences){
-        let indices = [];
-          for(let i = 0; i< reviewSentences.length; i++){
-              for(let j = 0; j < sickSentences.length; j++){
-                  if (reviewSentences[i].includes(sickSentences[j]))
-                      indices.push(i);
-              }
-          }
-        return indices;
-    }
-
-    function topSickSentences(sentencesScores){
-        let maxIndex = 0;
-        let maxScore = sentencesScores[0];
-        for(let i = 0; i< sentencesScores.length; i++){
-            if (sentencesScores[i] > maxScore){
-                maxScore = sentencesScores[i];
-                maxIndex = i;
-            }
-        }
-        return [maxIndex];
-    }
-
-    function compareDates(a, b){
-        var aDate = a['date_created'];
-        var bDate = b['date_created'];
-
-        return aDate < bDate ? 1 : -1;
-    }
-
-    function compareLRScores(a, b){
-        let compare = 'reg_total_score';
-
-        var aScore = a[compare];
-        var bScore = b[compare];
-
-        return aScore < bScore ? 1 : -1
-    }
-
-
-    function compareHSANScores(a, b){
-        let compare = 'hsan_total_score';
-
-        var aScore = a[compare];
-        var bScore = b[compare];
-
-        return aScore < bScore ? 1 : -1
-    }
-
-     function changeHistogram(values){
-        x = d3.scaleTime().domain([new Date(startTime), new Date(endTime)]).range([0, width]);
-
-         var histogram = d3.histogram()
-            .value(function(d) { return d; })   // I need to give the vector of value
-             .domain(x.domain())  // then the domain of the graphic
-            .thresholds(x.ticks(10)); // then the numbers of bins
-
-            var bins = histogram(values);
-
-            y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
-            yAxis.transition()
-            .duration(1000)
-            .call(d3.axisLeft(y).ticks(4));
-
-            xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks(4))
-
-            var u = svg.selectAll("rect")
-                    .data(bins);
-
-        // Manage the existing bars and eventually the new ones:
-            u
-            .enter()
-            .append("rect") // Add a new rect for each new elements
-            .merge(u) // get the already existing elements as well
-            .transition() // and apply changes to all of them
-            .duration(1000)
-              .attr("x", 1)
-              .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-              .attr("width", function(d) { return Math.max(x(d.x1) - x(d.x0) -1, 0); })
-              .attr("height", function(d) { return height - y(d.length); })
-              .style("fill", "blue")
-
-
-    // If less bar in the new histogram, I delete the ones not in use anymore
-         u.exit().remove()
     }
 
     </script>

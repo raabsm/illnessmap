@@ -4,8 +4,6 @@ import api_keys
 import json
 from mongodb_connection import MongoConnection
 from bson.json_util import dumps
-import time
-import schedule
 
 global data, db
 
@@ -40,7 +38,11 @@ class GetRestuarantInfo(tornado.web.RequestHandler):
 class GetReviews(tornado.web.RequestHandler):
     def get(self):
         self.write(data)
-        schedule.run_pending()
+
+
+class UpdateReviews(tornado.web.RequestHandler):
+    def get(self):
+        get_newest_reviews()
 
 
 def get_newest_reviews():
@@ -50,9 +52,6 @@ def get_newest_reviews():
     data = collection.find({})
     data = dumps(data)
     print("Data updated")
-
-
-schedule.every().day.do(get_newest_reviews)
 
 
 def init_mongo():
@@ -72,9 +71,11 @@ def make_app():
         (r"/restaurant_info", RestaurantHandler),
         (r"/get_reviews", GetReviews),
         (r"/get_restaurant_info", GetRestuarantInfo),
+        (r"/update_reviews", UpdateReviews),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/"}),
         (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/images"}),
-        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/css/"})
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/css/"}),
+        (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/js/"}),
     ])
 
 
