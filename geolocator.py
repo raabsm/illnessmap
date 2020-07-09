@@ -1,4 +1,3 @@
-import pandas as pd
 from geopy.geocoders import Nominatim, ArcGIS, OpenCage, OpenMapQuest
 from geopy.exc import GeocoderTimedOut, GeocoderQuotaExceeded, GeocoderInsufficientPrivileges
 from geopy.extra.rate_limiter import RateLimiter

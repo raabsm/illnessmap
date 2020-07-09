@@ -1,4 +1,3 @@
-import pandas as pd
 import sys
 import geolocator
 from mongodb_connection import MongoConnection
@@ -48,7 +47,7 @@ if __name__ == '__main__':
         db, col = sys.argv[1], sys.argv[2]
 
     try:
-        db = MongoConnection(db, api_keys.MongoDBURI)
+        db = MongoConnection(db, api_keys.DB_INFO['uri'])
         collection = db.return_collection(col)
     except Exception as e:
         print('Error while connecting: ', e)
