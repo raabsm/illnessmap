@@ -46,7 +46,7 @@ var reviewDisplay = function(){
             else{
                 let reviewDiv = document.createElement('div');
                 reviewDiv.className = 'review-div';
-                let date = getFormattedDate(new Date(reviews[i]['date_created']));
+                let date = getFormattedDate(new Date(reviews[i]['created']));
 
                 let reviewHeader = document.createElement('div');
                 reviewHeader.className = 'review-header';
@@ -54,15 +54,15 @@ var reviewDisplay = function(){
                 let container = document.createElement('div');
                 container.className = "inner-container";
 
-                container.appendChild(createYelpImg(reviews[i]['review_rating'], reviews[i]['review_url']));
+                container.appendChild(createYelpImg(reviews[i]['rating'], reviews[i]['url']));
                 container.appendChild(createTextElement(date));
                 reviewHeader.appendChild(container);
 
                 container = document.createElement('div');
                 container.className = 'inner-container';
-                container.appendChild(createProgressElement(reviews[i]['reg_total_score']));
+                container.appendChild(createProgressElement(reviews[i]['classification']['total_score']));
                 container.appendChild(createTextElement('LR'));
-                container.appendChild(createProgressElement(reviews[i]['hsan_total_score']));
+                container.appendChild(createProgressElement(reviews[i]['classification_hsan']['total_score']));
                 container.appendChild(createTextElement('HSAN'));
 
                 reviewHeader.appendChild(container);

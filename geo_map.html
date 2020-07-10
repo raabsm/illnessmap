@@ -57,10 +57,10 @@
 
             <div id="radio-buttons" class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" style="margin-top:5px">
                 <label class="btn btn-secondary">
-                    <input type="radio" name="classification" value="reg_total_score" autocomplete="off">LR
+                    <input type="radio" name="classification" value="classification" autocomplete="off">LR
                 </label>
                  <label class="btn btn-secondary">
-                    <input type="radio" name="classification" value="hsan_total_score" autocomplete="off">HSAN
+                    <input type="radio" name="classification" value="classification_hsan" autocomplete="off">HSAN
                  </label>
                  <label class="btn btn-secondary active">
                     <input type="radio" name="classification" value="union" autocomplete="off" checked>Union
@@ -403,12 +403,12 @@
                    for(var i = 0; i<business['reviews'].length; i++) {
                        let reviewScore = 0;
                        if(classification == 'union'){
-                           reviewScore = Math.max(business['reviews'][i]['reg_total_score'], business['reviews'][i]['hsan_total_score']);
+                           reviewScore = Math.max(business['reviews'][i]['classification']['total_score'], business['reviews'][i]['classification_hsan']['total_score']);
                        }
                        else{
-                           reviewScore = business['reviews'][i][classification];
+                           reviewScore = business['reviews'][i][classification]['total_score'];
                        }
-                       var reviewTime = Date.parse(business['reviews'][i]['date_created']);
+                       var reviewTime = Date.parse(business['reviews'][i]['created']);
 
                        if (reviewScore < sickReviewBottomThreshold ||
                            reviewScore > sickReviewTopThreshold ||

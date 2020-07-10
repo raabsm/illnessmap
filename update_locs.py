@@ -60,5 +60,3 @@ if __name__ == '__main__':
         collection.update_one({'_id': doc['_id']}, {'$set': to_insert})
 
     docs_without_lat_long.close()
-
-
