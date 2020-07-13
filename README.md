@@ -1,12 +1,10 @@
 
-Converts batches of restaurant locations to latitude/longitude pairs.
+How to build database:
 
-Usage:  python update_locs <path_to_file>
+1) Make sure you have the MongoDB Server running in the background on port 27017 (default)
+2) Navigate to build_scripts directory
+3) Activate the Python Environment with the proper dependencies 
+4) run the command "./build.sh <path/to/reviewsfile> <path/to/restaurantsfile>" to build the database and views
+5) After that is done, start the webserver: "python webapp.py"
+6) Navigate to port 9898 to see the website!
 
-File can contain previously updated information that will not be overwritten, for a json dump from the database.
-
-Environment details:
-
-python version: 3.7.6
-
-To create the environment, run the following command: "conda create --name <env name> --file spec-file.txt"  
