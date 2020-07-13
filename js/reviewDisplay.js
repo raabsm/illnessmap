@@ -40,7 +40,7 @@ var reviewDisplay = function(){
         for(var i = 0; i < reviews.length; i++){
             var hsan = reviews[i]['classification_hsan'];
 
-            if(!("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
+            if(!hsan || !("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
                 continue;
             }
             else{
@@ -187,9 +187,16 @@ var reviewDisplay = function(){
 
     function compareReviews(field){
         return function(a, b) {
-            var aScore = a[field];
-            var bScore = b[field];
-
+            var aScore;
+            var bScore;
+            if (field === 'created'){
+                aScore = a[field];
+                bScore = b[field];
+            }
+            else{
+                aScore = a[field] ? a[field]['total_score']: 0;
+                bScore = b[field]? b[field]['total_score']: 0;
+            }
             return aScore < bScore ? 1 : -1
         }
     }

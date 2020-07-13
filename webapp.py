@@ -32,6 +32,8 @@ class GetRestuarantInfo(tornado.web.RequestHandler):
     def get(self):
         id = self.get_query_argument('business_id')
         info = get_rest_info(id)
+        print(type(info))
+        print(info)
         self.write(info)
 
 
@@ -71,11 +73,10 @@ def make_app():
         (r"/restaurant_info", RestaurantHandler),
         (r"/get_reviews", GetReviews),
         (r"/get_restaurant_info", GetRestuarantInfo),
-        (r"/update_reviews", UpdateReviews),
-        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/"}),
-        (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/datafiles/images"}),
-        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/css/"}),
-        (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": "/home/smr2218/research/js/"}),
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/datafiles/"}),
+        (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/datafiles/images"}),
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/css/"}),
+        (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/js/"})
     ])
 
 

@@ -53,10 +53,10 @@
 
             <div id="radio-buttons" class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" style="margin-top:5px">
                 <label class="btn btn-secondary">
-                    <input type="radio" name="classification" value="reg_total_score" onchange="updateExpandedReviews()" utocomplete="off">LR
+                    <input type="radio" name="classification" value="classification" onchange="updateExpandedReviews()" utocomplete="off">LR
                 </label>
                  <label class="btn btn-secondary">
-                    <input type="radio" name="classification" value="hsan_total_score" onchange="updateExpandedReviews()" autocomplete="off">HSAN
+                    <input type="radio" name="classification" value="classification_hsan" onchange="updateExpandedReviews()" autocomplete="off">HSAN
                  </label>
                  <label class="btn btn-secondary active">
                     <input type="radio" name="classification" value="union" autocomplete="off" onchange="updateExpandedReviews()" checked>Union
@@ -167,7 +167,7 @@
             return [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('')
           }
           return null
-    }
+        }
 
 
         $(function (){
@@ -236,13 +236,13 @@
                 let option = this.value;
 
                 if(option == 'date'){
-                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'date_created', true);
+                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'created', true);
                 }
                 else if(option == 'hsan'){
-                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'hsan_total_score', true);
+                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'classification_hsan', true);
                 }
                 else{
-                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'reg_total_score', true);
+                    reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'classification', true);
                 }
             })
         })
@@ -267,12 +267,23 @@
         for(let i = 0; i < reviews.length; i++){
             let reviewScore = 0;
            if(classification == 'union'){
-               reviewScore = Math.max(reviews[i]['reg_total_score'], reviews[i]['hsan_total_score']);
+               if ('classification_hsan' in reviews[i]){
+                   reviewScore = Math.max(reviews[i]['classification']['total_score'], reviews[i]['classification_hsan']['total_score']);
+               }
+               else{
+                   reviewScore = reviews[i]['classification']['total_score']
+               }
            }
            else{
-               reviewScore = reviews[i][classification];
+               if (classification === 'classification_hsan' && !('classification_hsan' in reviews[i])){
+                   reviewScore = reviews[i]['classification']['total_score'];
+               }
+               else{
+                   reviewScore = reviews[i][classification]['total_score'];
+               }
            }
-           var reviewTime = Date.parse(reviews[i]['date_created']);
+
+           var reviewTime = Date.parse(reviews[i]['created']);
 
            if (reviewScore < sickReviewBottomThreshold ||
                reviewScore > sickReviewTopThreshold ||
@@ -286,7 +297,7 @@
                reviewsToShow.push(reviews[i]);
            }
         }
-        reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'date_created', true);
+        reviewDisplay.displaySickReviews('expanded-reviews', reviewsToShow, 'created', true);
         dateHistogram.changeHistogram(reviewsForHist, new Date(startTime), new Date(endTime));
         updateInfo();
     }

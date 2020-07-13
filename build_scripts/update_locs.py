@@ -1,7 +1,7 @@
 import sys
-import geolocator
-from mongodb_connection import MongoConnection
-import api_keys
+import webapp.illnessmap.build_scripts.geolocator
+from webapp.illnessmap.mongodb_connection import MongoConnection
+import webapp.illnessmap.api_keys
 
 
 def location_to_address(location_dict):
@@ -24,7 +24,7 @@ def location_to_lat_long(location_dict):
 
 
 def address_to_lat_long(address):
-    return geolocator.convert(address)
+    return webapp.illnessmap.build_scripts.geolocator.convert(address)
 
 
 def create_fields_from_location(location_dict):
@@ -47,7 +47,7 @@ if __name__ == '__main__':
         db, col = sys.argv[1], sys.argv[2]
 
     try:
-        db = MongoConnection(db, api_keys.DB_INFO['uri'])
+        db = MongoConnection(db, webapp.illnessmap.api_keys.DB_INFO['uri'])
         collection = db.return_collection(col)
     except Exception as e:
         print('Error while connecting: ', e)

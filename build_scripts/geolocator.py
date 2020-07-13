@@ -1,12 +1,12 @@
 from geopy.geocoders import Nominatim, ArcGIS, OpenCage, OpenMapQuest
 from geopy.exc import GeocoderTimedOut, GeocoderQuotaExceeded, GeocoderInsufficientPrivileges
 from geopy.extra.rate_limiter import RateLimiter
-import api_keys
+import webapp.illnessmap.api_keys
 
 nomatim = Nominatim(user_agent='locators')
 arcgis = ArcGIS(timeout=10)
-opencage = OpenCage(api_keys.OpenCage_API_KEY)
-openmapquest = OpenMapQuest(api_keys.OpenMapQuest_API_KEY)
+opencage = OpenCage(webapp.illnessmap.api_keys.OpenCage_API_KEY)
+openmapquest = OpenMapQuest(webapp.illnessmap.api_keys.OpenMapQuest_API_KEY)
 
 geocoders = [nomatim, arcgis, opencage, openmapquest]
 

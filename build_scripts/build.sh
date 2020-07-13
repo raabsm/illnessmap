@@ -11,4 +11,7 @@ mongo $host:$port initdb.js
 
 #TODO -- setup environment
 
-python update_locs.py
+python add_sentences.py FoodIllness AllSickReviews Reviews
+
+python update_locs.py FoodIllness Restaurants
+
