@@ -1,8 +1,7 @@
 import tornado.ioloop
 import tornado.web
-import api_keys
-import json
-from mongodb_connection import MongoConnection
+import os
+from pymongo import MongoClient
 from bson.json_util import dumps
 
 global data, db
@@ -10,7 +9,7 @@ global data, db
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render('geo_map.html', API_KEY=api_keys.Google_Maps_API_KEY)
+        self.render('geo_map.html', API_KEY=os.environ['GOOGLE_MAPS_API_KEY'])
 
 
 class RestaurantHandler(tornado.web.RequestHandler):
@@ -50,7 +49,7 @@ class UpdateReviews(tornado.web.RequestHandler):
 def get_newest_reviews():
     print("Querying DB...")
     global data
-    collection = db.return_collection(api_keys.DB_INFO['collections']['condensed_reviews'])
+    collection = db[os.environ['COLLECTION_NEWEST_REVIEWS']]
     data = collection.find({})
     data = dumps(data)
     print("Data updated")
@@ -58,25 +57,26 @@ def get_newest_reviews():
 
 def init_mongo():
     global db
-    db = MongoConnection(api_keys.DB_INFO['db'], api_keys.DB_INFO['uri'])
+    db = MongoClient(os.environ['URI'])[os.environ['DB']]
 
 
 def get_rest_info(id):
-    collection = db.return_collection(api_keys.DB_INFO['collections']['all_reviews'])
+    collection = db[os.environ['COLLECTION_ALL_REVIEWS']]
     rest_info = collection.find_one({'_id': id})
     return rest_info
 
 
 def make_app():
+    pwd = os.environ['PWD']
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/restaurant_info", RestaurantHandler),
         (r"/get_reviews", GetReviews),
         (r"/get_restaurant_info", GetRestuarantInfo),
-        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/datafiles/"}),
-        (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/datafiles/images"}),
-        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/css/"}),
-        (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": api_keys.cwd + "/js/"})
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/datafiles/"}),
+        (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/datafiles/images"}),
+        (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/css/"}),
+        (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/js/"})
     ])
 
 

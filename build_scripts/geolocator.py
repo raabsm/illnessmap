@@ -1,22 +1,25 @@
 from geopy.geocoders import Nominatim, ArcGIS, OpenCage, OpenMapQuest
 from geopy.exc import GeocoderTimedOut, GeocoderQuotaExceeded, GeocoderInsufficientPrivileges
-from geopy.extra.rate_limiter import RateLimiter
-import webapp.illnessmap.api_keys
+import os
 
 nomatim = Nominatim(user_agent='locators')
 arcgis = ArcGIS(timeout=10)
-opencage = OpenCage(webapp.illnessmap.api_keys.OpenCage_API_KEY)
-openmapquest = OpenMapQuest(webapp.illnessmap.api_keys.OpenMapQuest_API_KEY)
+geocoders = [nomatim, arcgis]
 
-geocoders = [nomatim, arcgis, opencage, openmapquest]
+if 'OPEN_CAGE_API_KEY' in os.environ:
+    geocoders.append(OpenCage(os.environ['OPEN_CAGE_API_KEY']))
+
+if 'OPEN_MAP_QUEST_API_KEY' in os.environ:
+    geocoders.append(OpenMapQuest(os.environ['OPEN_MAP_QUEST_API_KEY']))
+
 
 for i in range(len(geocoders)):
-    #rate_limiter = RateLimiter(geocoders[i].geocode, min_delay_seconds=1)
-    #geocoders[i] = rate_limiter
     geocoders[i] = geocoders[i].geocode
+
 
 def address_to_lat_long(df):
     df['lat-long'] = df['address'].apply(convert)
+
 
 def convert(address):
     i = 0
@@ -27,8 +30,8 @@ def convert(address):
     while i < len(geocoders):
         try:
             location = geocoders[i](address)
-            if location != None:
-                return (location.latitude, location.longitude)
+            if location is not None:
+                return location.latitude, location.longitude
             else:
                 i += 1
         except GeocoderTimedOut as timeout:

@@ -1,7 +1,7 @@
 import re
 import sys
-from webapp.illnessmap.mongodb_connection import MongoConnection
-import webapp.illnessmap.api_keys
+import os
+from pymongo import MongoClient
 
 
 if __name__ == '__main__':
@@ -13,9 +13,9 @@ if __name__ == '__main__':
         db, col, insert_col = sys.argv[1], sys.argv[2], sys.argv[3]
 
     try:
-        db = MongoConnection(db, webapp.illnessmap.api_keys.DB_INFO['uri'])
-        collection = db.return_collection(col)
-        insert_collection = db.return_collection(insert_col)
+        db = MongoClient(os.environ['URI'])[db]
+        collection = db[col]
+        insert_collection = db[insert_col]
     except Exception as e:
         print('Error while connecting: ', e)
         sys.exit()
