@@ -1,10 +1,11 @@
+## Explanation
+This map visualization was created to help track foodborne illness outbreaks in NYC. The Blue dots correspond to restaurants, and the opacity of the red-fill is the number of foodborne illness outbreaks in that region normalized over NYC
 
-How to build database:
+## Demo
+![Demo](./demo.gif)
 
-1) Make sure you have the MongoDB Server running in the background on port 27017 (default)
-2) Navigate to build_scripts directory
-3) Activate the Python Environment with the proper dependencies 
-4) run the command "./build.sh <path/to/reviewsfile> <path/to/restaurantsfile>" to build the database and views
-5) After that is done, start the webserver: "python webapp.py"
-6) Navigate to port 9898 to see the website!
+# To Run:
+
+1) docker-compose build
+2) docker-compose up
 
