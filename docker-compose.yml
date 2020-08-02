@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo:latest
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo_seed:
+    build: ./build_scripts
+    volumes:
+      - ${HOST_YELP_FILE_PATH}:/data_files/
+    env_file:
+      - db_info.env
+    links:
+      - mongo
+    depends_on:
+      - mongo
+
+  webapp:
+    build: ./app
+    links:
+      - mongo
+    ports:
+      - "9898:9898"
+    depends_on:
+      - mongo
+    env_file:
+      - db_info.env
+      - api_keys.env
+

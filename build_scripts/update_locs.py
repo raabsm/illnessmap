@@ -1,7 +1,4 @@
-import sys
 import geolocator
-import os
-from pymongo import MongoClient
 
 
 def location_to_address(location_dict):
@@ -38,25 +35,13 @@ def create_fields_from_location(location_dict):
     return to_return
 
 
-if __name__ == '__main__':
-
-    if len(sys.argv) != 3:
-        print("Usage: update_locs <DB> <Collection>")
-        sys.exit()
-    else:
-        db_name, col = sys.argv[1], sys.argv[2]
-
-    try:
-        db = MongoClient(os.environ['URI'])[db_name]
-        collection = db[col]
-    except Exception as e:
-        print('Error while connecting: ', e)
-        sys.exit()
-
+def add_location_data(collection):
     docs_without_lat_long = collection.find({'lat-long': None}, no_cursor_timeout=True)
     for doc in docs_without_lat_long:
         location_dict = doc['location']
         to_insert = create_fields_from_location(location_dict)
         collection.update_one({'_id': doc['_id']}, {'$set': to_insert})
+        print("updated doc")
 
     docs_without_lat_long.close()
+

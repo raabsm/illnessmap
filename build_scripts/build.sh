@@ -1,17 +1,13 @@
 #!/bin/bash
-source mongoconfig.sh
 
 REVIEWSFILE="$1"
 RESTAURANTSFILE="$2"
 
-mongoimport --host $host --port $port --db FoodIllness --collection Restaurants --drop --file $RESTAURANTSFILE
-mongoimport --host $host --port $port --db FoodIllness --collection Reviews --drop --file $REVIEWSFILE
+mongoimport --host $HOST --port $PORT --db $DB --collection Restaurants --drop --file $RESTAURANTSFILE
+mongoimport --host $HOST --port $PORT --db $DB --collection Reviews --drop --file $REVIEWSFILE
 
-mongo $host:$port initdb.js
+mongo $HOST:$PORT --eval "var dbName = '$DB'" initdb.js
 
-#TODO -- setup environment
 
-python add_sentences.py FoodIllness AllSickReviews Reviews
-
-python update_locs.py FoodIllness Restaurants
+python3 -u script.py
 

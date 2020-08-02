@@ -1,5 +1,5 @@
 
-db = db.getSiblingDB('FoodIllness');
+db = db.getSiblingDB(dbName);
 
 //indexes
 db.Reviews.createIndex({"classification_hsan.total_score": 1});

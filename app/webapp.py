@@ -9,7 +9,7 @@ global data, db
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render('geo_map.html', API_KEY=os.environ['GOOGLE_MAPS_API_KEY'])
+        self.render('html/geo_map.html', API_KEY=os.environ['GOOGLE_MAPS_API_KEY'])
 
 
 class RestaurantHandler(tornado.web.RequestHandler):
@@ -19,7 +19,7 @@ class RestaurantHandler(tornado.web.RequestHandler):
         end_time = self.get_argument('end_time')
         review_bottom_threshold = self.get_argument('review_bottom_threshold')
         review_top_threshold = self.get_argument('review_top_threshold')
-        self.render('restaurant.html',
+        self.render('html/restaurant.html',
                     start_time=start_time,
                     end_time=end_time,
                     review_bottom_threshold=review_bottom_threshold,
@@ -67,12 +67,13 @@ def get_rest_info(id):
 
 
 def make_app():
-    pwd = os.environ['PWD']
+    pwd = os.getcwd()
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/restaurant_info", RestaurantHandler),
         (r"/get_reviews", GetReviews),
         (r"/get_restaurant_info", GetRestuarantInfo),
+        (r"/update_data", UpdateReviews),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/datafiles/"}),
         (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/datafiles/images"}),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/css/"}),
