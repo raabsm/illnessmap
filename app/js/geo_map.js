@@ -242,7 +242,7 @@
             let option = this.value;
 
             if(option == 'date'){
-                reviewDisplay.displaySickReviews('reviews', selectedMarker.reviews, 'date_created');
+                reviewDisplay.displaySickReviews('reviews', selectedMarker.reviews, 'created');
             }
             else if(option == 'hsan'){
                 reviewDisplay.displaySickReviews('reviews', selectedMarker.reviews, 'classification_hsan');
