@@ -250,7 +250,11 @@
             else{
                 reviewDisplay.displaySickReviews('reviews', selectedMarker.reviews, 'classification');
             }
-        })
+        });
+
+        $('#radio-buttons :input').change(function() {
+            changeMap();
+        });
     })
 
     function getFormattedDate(date) {
@@ -299,7 +303,7 @@
                    }
                    else{
                        if (classification === 'classification_hsan' && !('classification_hsan' in business['reviews'][i])){
-                           reviewScore = business['reviews'][i]['classification']['total_score'];
+                           return;
                        }
                        else{
                            reviewScore = business['reviews'][i][classification]['total_score'];
