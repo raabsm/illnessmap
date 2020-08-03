@@ -31,7 +31,6 @@ class GetRestuarantInfo(tornado.web.RequestHandler):
     def get(self):
         id = self.get_query_argument('business_id')
         info = get_rest_info(id)
-        print(type(info))
         print(info)
         self.write(info)
 
@@ -44,13 +43,19 @@ class GetReviews(tornado.web.RequestHandler):
 class UpdateReviews(tornado.web.RequestHandler):
     def get(self):
         get_newest_reviews()
+        self.write("Completed")
 
 
 def get_newest_reviews():
     print("Querying DB...")
     global data
-    collection = db[os.environ['COLLECTION_NEWEST_REVIEWS']]
-    data = collection.find({})
+    try:
+        collection = db[os.environ['COLLECTION_NEWEST_MERGED_REVIEWS']]
+        data = collection.find({})
+    except Exception as e:
+        print("could not reload data:", e)
+        data = []
+
     data = dumps(data)
     print("Data updated")
 
@@ -61,7 +66,7 @@ def init_mongo():
 
 
 def get_rest_info(id):
-    collection = db[os.environ['COLLECTION_ALL_REVIEWS']]
+    collection = db[os.environ['COLLECTION_ALL_MERGED_REVIEWS']]
     rest_info = collection.find_one({'_id': id})
     return rest_info
 

@@ -11,9 +11,9 @@ services:
   mongo_seed:
     build: ./build_scripts
     volumes:
-      - ${HOST_YELP_FILE_PATH}:/data_files/
+      - ${HOST_YELP_FILE_PATH}:${CONTAINER_YELP_FILE_PATH}
     env_file:
-      - db_info.env
+      - .env
     links:
       - mongo
     depends_on:
@@ -28,6 +28,5 @@ services:
     depends_on:
       - mongo
     env_file:
-      - db_info.env
-      - api_keys.env
+      - .env
 

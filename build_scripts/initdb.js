@@ -14,15 +14,15 @@ db.createView(
     "Reviews",
     [
         {
-            $match: {created: {$gte: '2019-01-01'}}
-
-        },
-        {
             $match: {$or: [
                 {"classification.total_score": {$gte: 0.1}},
                 {"classification_hsan.total_score" : {$gte: 0.1}}
                 ]
             }
+        },
+        {
+            $match: {created: {$gte: '2019-01-01'}}
+
         }
     ]
 );

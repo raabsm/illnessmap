@@ -11,7 +11,7 @@ def connect_and_update_db():
     db_name = os.environ['DB']
     collection_restaurants = 'Restaurants'
     collection_reviews = "Reviews"
-    collection_all_reviews = os.environ['COLLECTION_ALL_REVIEWS']
+    collection_all_reviews = os.environ['COLLECTION_ALL_SICK_REVIEWS']
 
     try:
         db = MongoClient(os.environ['URI'])[db_name]

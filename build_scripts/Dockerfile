@@ -11,5 +11,5 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["./build.sh", "data_files/nyc_reviews_2020_03_22.json", "data_files/nyc_restaurant_data.json"]
+CMD ["./build.sh"]
 
