@@ -6,6 +6,7 @@ from bson.json_util import dumps
 
 global data, db
 
+reviews_with_sentence_errors = {}
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -46,6 +47,24 @@ class UpdateReviews(tornado.web.RequestHandler):
         self.write("Completed")
 
 
+class ReviewSentenceError(tornado.web.RequestHandler):
+    def post(self):
+        review_id = self.get_argument('review_id')
+        to_insert = {
+            'review_id': review_id,
+            'sentences_split_length': self.get_argument('sentences_split_length'),
+            'sentence_scores_length': self.get_argument('sentence_scores_length')
+        }
+        global reviews_with_sentence_errors
+        if review_id not in reviews_with_sentence_errors:
+            reviews_with_sentence_errors[review_id] = to_insert
+
+
+class GetReviewsWithSentenceErrors(tornado.web.RequestHandler):
+    def get(self):
+        self.write(dumps(reviews_with_sentence_errors))
+
+
 def get_newest_reviews():
     print("Querying DB...")
     global data
@@ -75,6 +94,8 @@ def make_app():
     pwd = os.getcwd()
     return tornado.web.Application([
         (r"/", MainHandler),
+        (r"/log_sentence_error", ReviewSentenceError),
+        (r"/get_sentence_errors", GetReviewsWithSentenceErrors),
         (r"/restaurant_info", RestaurantHandler),
         (r"/get_reviews", GetReviews),
         (r"/get_restaurant_info", GetRestuarantInfo),

@@ -40,40 +40,60 @@ var reviewDisplay = function(){
         for(var i = 0; i < reviews.length; i++){
             var hsan = reviews[i]['classification_hsan'];
 
-            if(!hsan || !(reviews[i]['sentences']) || !("sentence_scores" in hsan) || hsan['sentence_scores'].length != reviews[i]['sentences'].length){
-                continue;
-            }
-            else{
-                let reviewDiv = document.createElement('div');
-                reviewDiv.className = 'review-div';
-                let date = getFormattedDate(new Date(reviews[i]['created']));
+            let reviewDiv = document.createElement('div');
+            reviewDiv.className = 'review-div';
+            let date = getFormattedDate(new Date(reviews[i]['created']));
 
-                let reviewHeader = document.createElement('div');
-                reviewHeader.className = 'review-header';
+            let reviewHeader = document.createElement('div');
+            reviewHeader.className = 'review-header';
 
-                let container = document.createElement('div');
-                container.className = "inner-container";
+            let container = document.createElement('div');
+            container.className = "inner-container";
 
-                container.appendChild(createYelpImg(reviews[i]['rating'], reviews[i]['url']));
-                container.appendChild(createTextElement(date));
-                reviewHeader.appendChild(container);
+            container.appendChild(createYelpImg(reviews[i]['rating'], reviews[i]['url']));
+            container.appendChild(createTextElement(date));
+            reviewHeader.appendChild(container);
 
-                container = document.createElement('div');
-                container.className = 'inner-container';
-                container.appendChild(createProgressElement(reviews[i]['classification']['total_score']));
-                container.appendChild(createTextElement('LR'));
+            container = document.createElement('div');
+            container.className = 'inner-container';
+            container.appendChild(createProgressElement(reviews[i]['classification']['total_score']));
+            container.appendChild(createTextElement('LR'));
+
+            var sentences = reviews[i]['text'].split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s/);
+
+            if(hsan && (sentences) && ("sentence_scores" in hsan)) {
                 container.appendChild(createProgressElement(reviews[i]['classification_hsan']['total_score']));
                 container.appendChild(createTextElement('HSAN'));
-
                 reviewHeader.appendChild(container);
-
                 reviewDiv.appendChild(reviewHeader);
 
-                let sentencesDiv = sentenceDisplayFunction(hsan, reviews[i]['sentences']);
-                reviewDiv.appendChild(sentencesDiv);
-                reviewHtml.appendChild(reviewDiv);
+                if(hsan['sentence_scores'].length == sentences.length) {
+                    let sentencesDiv = sentenceDisplayFunction(hsan, sentences);
+                    reviewDiv.appendChild(sentencesDiv);
+                }
+                else{
+                    logSentencesDontMatch(reviews[i]['_id'], sentences.length, hsan['sentence_scores'].length)
+                }
             }
+            else{
+                reviewHeader.appendChild(container);
+                reviewDiv.appendChild(reviewHeader);
+            }
+
+
+            reviewHtml.appendChild(reviewDiv);
         }
+    }
+
+    function logSentencesDontMatch(reviewId, sentencesLength, HSANSentencesLength){
+        $.post("/log_sentence_error",
+            {
+                review_id: reviewId,
+                sentences_split_length: sentencesLength,
+                sentence_scores_length: HSANSentencesLength
+            },
+            function (result){}
+            )
     }
 
     function displaySickSentences(hsan, sentences){
