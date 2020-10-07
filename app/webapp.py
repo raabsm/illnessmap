@@ -32,7 +32,8 @@ class GetRestuarantInfo(tornado.web.RequestHandler):
     def get(self):
         id = self.get_query_argument('business_id')
         info = get_rest_info(id)
-        print(info)
+        # json_string = dumps(info, ensure_ascii=False).encode('utf8')
+        # print(info)
         self.write(info)
 
 

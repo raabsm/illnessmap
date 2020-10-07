@@ -35,12 +35,14 @@ def create_fields_from_location(location_dict):
     return to_return
 
 
-def add_location_data(collection):
-    docs_without_lat_long = collection.find({'lat-long': None}, no_cursor_timeout=True)
+def add_location_data(collection_restaurants_join, collection_lat_long):
+    docs_without_lat_long = collection_restaurants_join.find({'lat-long': None})
     for doc in docs_without_lat_long:
         location_dict = doc['location']
         to_insert = create_fields_from_location(location_dict)
-        collection.update_one({'_id': doc['_id']}, {'$set': to_insert})
+        # collection_restaurants_join.update_one({'_id': doc['_id']}, {'$set': {'geocoded': True}})
+        to_insert['rest_id'] = doc['_id']
+        collection_lat_long.insert_one(to_insert)
         print("updated doc")
 
     docs_without_lat_long.close()

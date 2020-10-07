@@ -16,6 +16,7 @@ services:
       - .env
     links:
       - mongo
+      - webapp
     depends_on:
       - mongo
 
