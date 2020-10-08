@@ -11,6 +11,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT ["./build.sh"]
+ENTRYPOINT ["./wait-for-it.sh", "$HOST:$PORT", "--", "./build.sh"]
 CMD [""]
 

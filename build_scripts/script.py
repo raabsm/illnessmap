@@ -12,19 +12,27 @@ def connect_and_update_db():
     collection_restaurants = os.environ['COLLECTION_RESTAURANTS_JOIN_EXTRA_FIELD']
     collection_lat_long = os.environ['COLLECTION_RESTAURANTS_EXTRA_FIELD']
 
-    try:
-        db = MongoClient(os.environ['URI'])[db_name]
-
+    while(True):
         try:
-            collection_restaurants = db[collection_restaurants]
-            collection_lat_long = db[collection_lat_long]
-            add_location_data(collection_restaurants, collection_lat_long)
+            db = MongoClient(os.environ['URI'])[db_name]
 
-            print("Ran add location")
+            try:
+                collection_restaurants = db[collection_restaurants]
+                collection_lat_long = db[collection_lat_long]
+                add_location_data(collection_restaurants, collection_lat_long)
+
+                print("Ran add location")
+            except Exception as e:
+                print("error when getting Restaurant collections", e)
+
+                time.sleep(10)
+                continue
         except Exception as e:
-            print("error when getting Restaurant collections", e)
-    except Exception as e:
-        print('Error while connecting to DB: ', e)
+            print('Error while connecting to DB: ', e)
+            time.sleep(10)
+            continue
+
+        break
 
 
 def update_webapp_data():
