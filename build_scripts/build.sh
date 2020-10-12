@@ -7,5 +7,3 @@ fi
 
 mongo $HOST:$PORT --eval "var dbName = '$DB'" initdb.js
 
-
-python3 -u script.py

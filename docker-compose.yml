@@ -16,6 +16,13 @@ services:
       - .env
     links:
       - mongo
+    depends_on:
+      - mongo
+
+  daily_script:
+    build: ./daily_script
+    links:
+      - mongo
       - webapp
     depends_on:
       - mongo

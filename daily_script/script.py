@@ -38,6 +38,7 @@ def connect_and_update_db():
 def update_webapp_data():
     try:
         requests.get('http://webapp:9898/update_reviews')
+        print("updated database dump")
     except requests.exceptions.RequestException as e:  # This is the correct syntax
         print("didn't work yet")
 
