@@ -24,6 +24,8 @@ services:
     links:
       - mongo
       - webapp
+    env_file:
+      - .env
     depends_on:
       - mongo
 
