@@ -87,7 +87,7 @@ def init_mongo():
 
 def get_rest_info(id):
     # collection = db[os.environ['COLLECTION_ALL_MERGED_REVIEWS']]
-    collection = db['Restaurants']
+    collection = db['businesses']
     rest_info = collection.aggregate([
         {
             '$match': {

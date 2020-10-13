@@ -2,17 +2,17 @@
 db = db.getSiblingDB(dbName);
 
 //indexes
-db.Reviews.createIndex({"classification_hsan.total_score": 1});
-db.Reviews.createIndex({"classification.total_score": 1});
-db.Reviews.createIndex({"business_id": 1});
-db.Reviews.createIndex({"classification.total_score": 1, "classification_hsan.total_score": 1});
+db.reviews.createIndex({"classification_hsan.total_score": 1});
+db.reviews.createIndex({"classification.total_score": 1});
+db.reviews.createIndex({"business_id": 1});
+db.reviews.createIndex({"classification.total_score": 1, "classification_hsan.total_score": 1});
 db.RestaurantExtraFields.createIndex({"rest_id": 1});
 
 //views
 
 db.createView(
     "RecentSickReviews",
-    "Reviews",
+    "reviews",
     [
         {
             $match: {$or: [
@@ -29,7 +29,7 @@ db.createView(
 );
 
 db.createView("RestaurantsJoinExtraField",
-    "Restaurants",
+    "businesses",
     [{
     $lookup: {
         from: 'RestaurantExtraFields',
@@ -57,7 +57,7 @@ db.createView("RestaurantsJoinExtraField",
 
 db.createView(
     "AllSickReviews",
-    "Reviews",
+    "reviews",
     [{$match: {$or: [
         {"classification.total_score": {$gte: 0.1}},
                 {"classification_hsan.total_score" : {$gte: 0.1}}]}}]);

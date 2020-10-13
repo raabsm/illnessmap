@@ -1,17 +1,8 @@
 version: '3'
 
 services:
-  mongo:
-    image: mongo:4.4.0
-    volumes:
-      - ./data:/data/db
-    ports:
-      - "27017:27017"
-
   mongo_seed:
     build: ./build_scripts
-    volumes:
-      - ${HOST_YELP_FILE_PATH}:${CONTAINER_YELP_FILE_PATH}
     env_file:
       - .env
     links:
