@@ -6,6 +6,6 @@ RUN apt-get update
 
 COPY . .
 
-ENTRYPOINT ["./wait-for-it.sh", "$HOST:$PORT", "--", "./build.sh"]
+ENTRYPOINT ./wait-for-it.sh $HOST:$PORT -t 120 -- ./build.sh
 CMD [""]
 

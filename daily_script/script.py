@@ -14,9 +14,10 @@ def connect_and_update_db():
 
     while(True):
         try:
-            db = MongoClient(os.environ['URI'])[db_name]
+            client = MongoClient(os.environ['URI'])
 
             try:
+                db = client[db_name]
                 collection_restaurants = db[collection_restaurants]
                 collection_lat_long = db[collection_lat_long]
                 add_location_data(collection_restaurants, collection_lat_long)
@@ -25,10 +26,12 @@ def connect_and_update_db():
             except Exception as e:
                 print("error when getting Restaurant collections", e)
 
+                client.close()
                 time.sleep(10)
                 continue
         except Exception as e:
             print('Error while connecting to DB: ', e)
+
             time.sleep(10)
             continue
 

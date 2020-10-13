@@ -39,8 +39,8 @@ def convert(address):
         except (GeocoderQuotaExceeded, GeocoderInsufficientPrivileges) as quota:
             geocoders.pop(i)
             print("quota exceeded")
-        except Exception:
-            print("Something else happened", address)
+        except Exception as e:
+            print("Something else happened", address, e)
             return None
 
     print("Not Found: ", address)

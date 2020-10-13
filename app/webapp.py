@@ -86,9 +86,24 @@ def init_mongo():
 
 
 def get_rest_info(id):
-    collection = db[os.environ['COLLECTION_ALL_MERGED_REVIEWS']]
-    rest_info = collection.find_one({'_id': id})
-    return rest_info
+    # collection = db[os.environ['COLLECTION_ALL_MERGED_REVIEWS']]
+    collection = db['Restaurants']
+    rest_info = collection.aggregate([
+        {
+            '$match': {
+                '_id': id
+            },
+        },
+        {
+            '$lookup': {
+                'from': 'AllSickReviews',
+                'localField': '_id',
+                'foreignField': 'business_id',
+                'as': 'reviews'
+            }
+        }
+    ])
+    return list(rest_info)[0]
 
 
 def make_app():

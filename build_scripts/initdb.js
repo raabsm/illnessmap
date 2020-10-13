@@ -31,31 +31,28 @@ db.createView(
 db.createView("RestaurantsJoinExtraField",
     "Restaurants",
     [{
-        $lookup: {
-            from: 'RestaurantExtraFields',
-            localField: '_id',
-            foreignField: 'rest_id',
-            as: 'doc'
+    $lookup: {
+        from: 'RestaurantExtraFields',
+        localField: '_id',
+        foreignField: 'rest_id',
+        as: 'doc'
         }
     }, {
-        $replaceRoot: {
-            newRoot: {
-                $mergeObjects: [{
-                        $arrayElemAt: [
-                            '$doc',
-                            0
-                        ]
-                    },
-                    '$$ROOT'
-                ]
-            }
+        $unwind: {
+            path: '$doc',
+            preserveNullAndEmptyArrays: true
+        }
+    }, {
+        $addFields: {
+            'lat-long': '$doc.lat-long',
+            'address': '$doc.address'
         }
     }, {
         $project: {
-            doc: 0,
-            rest_id: 0
+            doc: 0
         }
     }]
+
 );
 
 db.createView(
