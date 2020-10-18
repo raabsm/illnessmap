@@ -36,6 +36,7 @@ def create_fields_from_location(location_dict):
 
 
 def add_location_data(collection_restaurants_join, collection_lat_long):
+    counter = 0
     docs_without_lat_long = collection_restaurants_join.find({'lat-long': None})
     for doc in docs_without_lat_long:
         location_dict = doc['location']
@@ -44,6 +45,8 @@ def add_location_data(collection_restaurants_join, collection_lat_long):
         to_insert['rest_id'] = doc['_id']
         collection_lat_long.insert_one(to_insert)
         print("updated doc")
+        counter += 1
 
     docs_without_lat_long.close()
+    return counter
 

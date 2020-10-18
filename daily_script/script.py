@@ -12,38 +12,34 @@ def connect_and_update_db():
     collection_restaurants = os.environ['COLLECTION_RESTAURANTS_JOIN_EXTRA_FIELD']
     collection_lat_long = os.environ['COLLECTION_RESTAURANTS_EXTRA_FIELD']
 
-    while(True):
+    db_not_active = True
+    while(db_not_active):
         try:
             client = MongoClient(os.environ['URI'])
-
+            db_not_active = False
+        except Exception as e:
+            print('Error while connecting to DB: ', e)
+            print('trying again...')
+            time.sleep(10)
+        else:
             try:
                 db = client[db_name]
                 collection_restaurants = db[collection_restaurants]
                 collection_lat_long = db[collection_lat_long]
-                add_location_data(collection_restaurants, collection_lat_long)
-
-                print("Ran add location")
+                num_edited = add_location_data(collection_restaurants, collection_lat_long)
+                print(num_edited, "docs edited")
             except Exception as e:
-                print("error when getting Restaurant collections", e)
-
-                client.close()
-                time.sleep(10)
-                continue
-        except Exception as e:
-            print('Error while connecting to DB: ', e)
-
-            time.sleep(10)
-            continue
-
-        break
+                print("add location error:", e)
 
 
 def update_webapp_data():
-    try:
-        requests.get('http://webapp:9898/update_reviews')
-        print("updated database dump")
-    except requests.exceptions.RequestException as e:  # This is the correct syntax
-        print("didn't work yet")
+    port = os.environ.get('WEBAPP_PORT')
+    if port:
+        try:
+            requests.get('http://webapp:' + str(port) + '/update_reviews')
+            print("updated database dump")
+        except requests.exceptions.RequestException as e:  # This is the correct syntax
+            print("didn't work yet")
 
 
 

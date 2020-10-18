@@ -28,6 +28,8 @@ def convert(address):
         return None
 
     while i < len(geocoders):
+        print(i, geocoders[i])
+
         try:
             location = geocoders[i](address)
             if location is not None:
@@ -35,13 +37,14 @@ def convert(address):
             else:
                 i += 1
         except GeocoderTimedOut as timeout:
+            print("timeout")
             i += 1
         except (GeocoderQuotaExceeded, GeocoderInsufficientPrivileges) as quota:
-            geocoders.pop(i)
+            i += 1
             print("quota exceeded")
         except Exception as e:
             print("Something else happened", address, e)
-            return None
+            i += 1
 
     print("Not Found: ", address)
     return None
