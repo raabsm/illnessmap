@@ -12,6 +12,7 @@
 
     var zipFeature = {'feature': null, 'over': false};
     var markers = [];
+    var allSickReviews=[];
 
     var startTime = (new Date(2019, 1, 1)).getTime();
     var endTime = (new Date()).getTime();
@@ -269,170 +270,172 @@
       return month + '/' + day + '/' + year;
     }
 
-    function loadRestaurants(){
-    xhr = $.getJSON("/get_reviews", function(businesses){
+    function loadDataFromServer() {
+         xhr = $.getJSON("/get_reviews", function(businesses){
+             console.log("started");
+             allSickReviews = businesses;
+             console.log("ended");
+             loadRestaurants();
+         }).fail(function (jqxhr, status, error) {
+            console.log('error', status, error);
+         }
+        );
+    }
+
+    function loadRestaurants() {
         sickMin = Number.MAX_VALUE;
         sickMax = -Number.MAX_VALUE;
-         businesses.forEach(function (business){
-             if (!('lat-long' in business) || (business['lat-long'] == null)){
-                 return;
-             }
-               let latlng = new google.maps.LatLng(business['lat-long'][0],
-                       business['lat-long'][1]);
-               // let feature = map.data.getFeatureById(zip);
-               //  if(feature === undefined){
-               // // console.log("undefined");
-               //  }
-               //  else{
-               //      feature.getProperty('test');
-               //      feature.setProperty('test', 0);
-               //  }
-               let reviews = [];
-               let restReviewDates = [];
+        allSickReviews.forEach(function (business) {
+            if (!('lat-long' in business) || (business['lat-long'] == null)) {
+                return;
+            }
+            let latlng = new google.maps.LatLng(business['lat-long'][0],
+                business['lat-long'][1]);
+            // let feature = map.data.getFeatureById(zip);
+            //  if(feature === undefined){
+            // // console.log("undefined");
+            //  }
+            //  else{
+            //      feature.getProperty('test');
+            //      feature.setProperty('test', 0);
+            //  }
+            let reviews = [];
+            let restReviewDates = [];
 
-               let aboveThreshold = 0;
-               for(var i = 0; i<business['reviews'].length; i++) {
-                   let reviewScore = 0;
-                   if(classification == 'union'){
-                       if ('classification_hsan' in business['reviews'][i]){
-                           reviewScore = Math.max(business['reviews'][i]['classification']['total_score'], business['reviews'][i]['classification_hsan']['total_score']);
-                       }
-                       else{
-                           reviewScore = business['reviews'][i]['classification']['total_score']
-                       }
-                   }
-                   else{
-                       if (classification === 'classification_hsan' && !('classification_hsan' in business['reviews'][i])){
-                           return;
-                       }
-                       else{
-                           reviewScore = business['reviews'][i][classification]['total_score'];
-                       }
-                   }
-                   var reviewTime = Date.parse(business['reviews'][i]['created']);
-
-                   if (reviewScore < sickReviewBottomThreshold ||
-                       reviewScore > sickReviewTopThreshold ||
-                       reviewTime < startTime ||
-                       reviewTime > endTime) {
-
-                       continue;
-                   } else {
-                       reviews.push(business['reviews'][i]);
-                       let reviewDate = new Date(reviewTime)
-                       reviewsForHist.push(reviewDate);
-                       restReviewDates.push(reviewDate);
-                       aboveThreshold += 1;
-                   }
-               }
-
-               if(selectedMarker != null && selectedMarker.rest_info.id == business['_id']){
-                   selectedMarker.normal_icon.scale = aboveThreshold/scalingFactor;
-                   selectedMarker.reviews = reviews;
-                   selectedMarker.rest_info.total_review_count = business['review_count'];
-                   selectedMarker.rest_info.rating = business['rating'];
-                   selectedMarker.sick_score = aboveThreshold;
-                   updateClickBox(selectedMarker);
-                   return;
-               }
-
-               let feature = map.data.getFeatureById(business['location']['postal_code']);
-               if(feature){
-                   let zip_sick_count = 0;
-                   let zipReviewDates = feature.getProperty('review_dates');
-
-                   if(zipSet.has(business['location']['postal_code'])){
-                       zip_sick_count = feature.getProperty('sick_score');
-                   }
-                   else{
-                       zipSet.add(business['location']['postal_code']);
-                       zipReviewDates = [];
-
-                   }
-                   if(zip_sick_count > sickMax){
-                       sickMax = zip_sick_count;
+            let aboveThreshold = 0;
+            for (var i = 0; i < business['reviews'].length; i++) {
+                let reviewScore = 0;
+                if (classification == 'union') {
+                    if ('classification_hsan' in business['reviews'][i]) {
+                        reviewScore = Math.max(business['reviews'][i]['classification']['total_score'], business['reviews'][i]['classification_hsan']['total_score']);
+                    } else {
+                        reviewScore = business['reviews'][i]['classification']['total_score']
                     }
-                    if(zip_sick_count < sickMin){
-                        sickMin = zip_sick_count;
+                } else {
+                    if (classification === 'classification_hsan' && !('classification_hsan' in business['reviews'][i])) {
+                        return;
+                    } else {
+                        reviewScore = business['reviews'][i][classification]['total_score'];
                     }
-                   feature.setProperty('sick_score', zip_sick_count + aboveThreshold);
-                    if(zipReviewDates){
-                        feature.setProperty('review_dates', zipReviewDates.concat(restReviewDates));
-                    }
-                    else{
-                        feature.setProperty('review_dates', restReviewDates);
-                    }
+                }
+                var reviewTime = Date.parse(business['reviews'][i]['created']);
 
-               }
+                if (reviewScore < sickReviewBottomThreshold ||
+                    reviewScore > sickReviewTopThreshold ||
+                    reviewTime < startTime ||
+                    reviewTime > endTime) {
 
-               if(aboveThreshold < sickRestaurantThreshold){
-                 return;
-               }
+                    continue;
+                } else {
+                    reviews.push(business['reviews'][i]);
+                    let reviewDate = new Date(reviewTime)
+                    reviewsForHist.push(reviewDate);
+                    restReviewDates.push(reviewDate);
+                    aboveThreshold += 1;
+                }
+            }
 
-               var regular_icon = {
-                       path: google.maps.SymbolPath.CIRCLE,
-                       scale: aboveThreshold/scalingFactor,
-                       fillColor: 'blue',
-                       fillOpacity: 0.3,
-                       strokeWeight: 1,
-                       strokeColor:'grey'
-                   };
+            if (selectedMarker != null && selectedMarker.rest_info.id == business['_id']) {
+                selectedMarker.normal_icon.scale = aboveThreshold / scalingFactor;
+                selectedMarker.reviews = reviews;
+                selectedMarker.rest_info.total_review_count = business['review_count'];
+                selectedMarker.rest_info.rating = business['rating'];
+                selectedMarker.sick_score = aboveThreshold;
+                updateClickBox(selectedMarker);
+                return;
+            }
 
-               var marker = new google.maps.Marker({
-                   map: map,
-                   normal_icon: regular_icon,
-                   icon: regular_icon,
-                   position: latlng,
-                   sick_score: aboveThreshold,
-                   reviews: reviews,
-                   rest_info:{
-                       name: business['name'],
-                       id: business['_id'],
-                       address: business['address'],
-                       total_review_count: business['review_count'],
-                       url: business['url'],
-                       business_url: business['business_url'],
-                       rating: business['rating'],
-                       phone: business['phone']
-                   },
-                   zIndex: 999
-               });
+            let feature = map.data.getFeatureById(business['location']['postal_code']);
+            if (feature) {
+                let zip_sick_count = 0;
+                let zipReviewDates = feature.getProperty('review_dates');
 
-               google.maps.event.addListener(marker, 'mouseover', function() {
-                    updateMouseoverBox('Restaurant Name:', this.rest_info.name, this.sick_score);
+                if (zipSet.has(business['location']['postal_code'])) {
+                    zip_sick_count = feature.getProperty('sick_score');
+                } else {
+                    zipSet.add(business['location']['postal_code']);
+                    zipReviewDates = [];
 
-                    var icon = this.icon;
-                    icon.scale = this.normal_icon.scale + 3;
-                    this.setIcon(icon);
-                });
+                }
+                if (zip_sick_count > sickMax) {
+                    sickMax = zip_sick_count;
+                }
+                if (zip_sick_count < sickMin) {
+                    sickMin = zip_sick_count;
+                }
+                feature.setProperty('sick_score', zip_sick_count + aboveThreshold);
+                if (zipReviewDates) {
+                    feature.setProperty('review_dates', zipReviewDates.concat(restReviewDates));
+                } else {
+                    feature.setProperty('review_dates', restReviewDates);
+                }
 
-                google.maps.event.addListener(marker, 'click', function() {
-                    updateClickBox(this);
-                    if(selectedMarker != null){
-                        makeNeutralIcon(selectedMarker);
-                    }
-                    selectedMarker = this;
-                    this.setIcon('https://www.google.com/mapfiles/marker_green.png');
-                });
+            }
 
-               google.maps.event.addListener(marker, 'mouseout', function() {
-                   if(zipFeature['over']){
-                       var feature = zipFeature['feature'];
-                       var sickScoreString = feature.getProperty('sick_score');
-                       updateMouseoverBox('Zip Code:', feature.getProperty('postalcode'), sickScoreString);
-                   }
+            if (aboveThreshold < sickRestaurantThreshold) {
+                return;
+            }
 
-                   if(selectedMarker!== this){
-                       makeNeutralIcon(this);
-                   }
-               });
-               markers.push(marker);
-            })
-        xhr = null;
+            var regular_icon = {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: aboveThreshold / scalingFactor,
+                fillColor: 'blue',
+                fillOpacity: 0.3,
+                strokeWeight: 1,
+                strokeColor: 'grey'
+            };
+
+            var marker = new google.maps.Marker({
+                map: map,
+                normal_icon: regular_icon,
+                icon: regular_icon,
+                position: latlng,
+                sick_score: aboveThreshold,
+                reviews: reviews,
+                rest_info: {
+                    name: business['name'],
+                    id: business['_id'],
+                    address: business['address'],
+                    total_review_count: business['review_count'],
+                    url: business['url'],
+                    business_url: business['business_url'],
+                    rating: business['rating'],
+                    phone: business['phone']
+                },
+                zIndex: 999
+            });
+
+            google.maps.event.addListener(marker, 'mouseover', function () {
+                updateMouseoverBox('Restaurant Name:', this.rest_info.name, this.sick_score);
+
+                var icon = this.icon;
+                icon.scale = this.normal_icon.scale + 3;
+                this.setIcon(icon);
+            });
+
+            google.maps.event.addListener(marker, 'click', function () {
+                updateClickBox(this);
+                if (selectedMarker != null) {
+                    makeNeutralIcon(selectedMarker);
+                }
+                selectedMarker = this;
+                this.setIcon('https://www.google.com/mapfiles/marker_green.png');
+            });
+
+            google.maps.event.addListener(marker, 'mouseout', function () {
+                if (zipFeature['over']) {
+                    var feature = zipFeature['feature'];
+                    var sickScoreString = feature.getProperty('sick_score');
+                    updateMouseoverBox('Zip Code:', feature.getProperty('postalcode'), sickScoreString);
+                }
+
+                if (selectedMarker !== this) {
+                    makeNeutralIcon(this);
+                }
+            });
+            markers.push(marker);
+        });
         dateHistogram.changeHistogram(reviewsForHist, new Date(startTime), new Date(endTime));
-    }).fail(function (jqxhr, status, error) {
-            console.log('error', status, error) }
-        );
     }
 
     function makeNeutralIcon(marker){
@@ -442,7 +445,7 @@
         map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
         google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
         //        loadSickData();
-            loadRestaurants();
+            loadDataFromServer();
     });
     }
 

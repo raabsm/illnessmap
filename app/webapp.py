@@ -68,15 +68,16 @@ class GetReviewsWithSentenceErrors(tornado.web.RequestHandler):
 
 def get_newest_reviews():
     print("Querying DB...")
-    global data
     try:
+        init_mongo()
         collection = db[os.environ['COLLECTION_NEWEST_MERGED_REVIEWS']]
-        data = collection.find({})
+        temp = collection.find({})
     except Exception as e:
         print("could not reload data:", e)
-        data = []
+        temp = []
 
-    data = dumps(data)
+    global data
+    data = dumps(temp)
     print("Data updated")
 
 
@@ -124,9 +125,8 @@ def make_app():
 
 
 if __name__ == "__main__":
-    init_mongo()
     get_newest_reviews()
     app = make_app()
-    app.listen(9898)
+    app.listen(int(os.environ['WEBAPP_PORT']))
     print('running')
     tornado.ioloop.IOLoop.current().start()
