@@ -3,6 +3,7 @@ import tornado.web
 import os
 from pymongo import MongoClient
 from bson.json_util import dumps
+import datetime
 
 global data, db
 
@@ -67,7 +68,7 @@ class GetReviewsWithSentenceErrors(tornado.web.RequestHandler):
 
 
 def get_newest_reviews():
-    print("Querying DB...")
+    print("Querying DB...", datetime.datetime.now())
     try:
         init_mongo()
         collection = db[os.environ['COLLECTION_NEWEST_MERGED_REVIEWS']]
@@ -78,7 +79,7 @@ def get_newest_reviews():
 
     global data
     data = dumps(temp)
-    print("Data updated")
+    print("Data updated", datetime.datetime.now())
 
 
 def init_mongo():
