@@ -4,39 +4,7 @@ services:
   mongo:
     image: mongo:4.4.0
     volumes:
-      - ./data:/data/db
+      - ./data_new:/data/db
     ports:
       - "27017:27017"
-
-  mongo_seed:
-    build: ./build_scripts
-    volumes:
-      - ${HOST_YELP_FILE_PATH}:${CONTAINER_YELP_FILE_PATH}
-    env_file:
-      - .env
-    links:
-      - mongo
-    depends_on:
-      - mongo
-
-  daily_script:
-    build: ./daily_script
-    links:
-      - mongo
-      - webapp
-    env_file:
-      - .env
-    depends_on:
-      - mongo
-
-  webapp:
-    build: ./app
-    links:
-      - mongo
-    ports:
-      - "9898:9898"
-    depends_on:
-      - mongo
-    env_file:
-      - .env
 
