@@ -12,8 +12,8 @@ var yelpImages = function() {
              4.5: '4_half.png',
              5.0: '5.png'
          };
-    var smallImagePath = "images/yelp-ratings-small/";
-    var largeImagePath = "images/yelp-ratings-large/";
+    var smallImagePath = "/foodbornemap/images/yelp-ratings-small/";
+    var largeImagePath = "/foodbornemap/images/yelp-ratings-large/";
 
     function getImgNameFromRating(rating){
         return starRatings[Math.round(rating * 2) / 2];
@@ -86,7 +86,7 @@ var reviewDisplay = function(){
     }
 
     function logSentencesDontMatch(reviewId, sentencesLength, HSANSentencesLength){
-        $.post("/log_sentence_error",
+        $.post("/foodbornemap/log_sentence_error",
             {
                 review_id: reviewId,
                 sentences_split_length: sentencesLength,

@@ -13,9 +13,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-    <link href="/css/styles.css" rel="stylesheet" type="text/css">
-    <script src = "/js/histogram.js"></script>
-    <script src = "/js/reviewDisplay.js"></script>
+    <link href="/foodbornemap/css/styles.css" rel="stylesheet" type="text/css">
+    <script src = "/foodbornemap/js/histogram.js"></script>
+    <script src = "/foodbornemap/js/reviewDisplay.js"></script>
 
       <style>
         .ui-slider-horizontal {
@@ -136,7 +136,7 @@
 
         // append the svg object to the body of the page
         function loadReviews(){
-            $.getJSON("/get_restaurant_info", {'business_id': businessId}, function(info){
+            $.getJSON("/foodbornemap/get_restaurant_info", {'business_id': businessId}, function(info){
                 restInfo = info;
                 reviews = restInfo['reviews'];
                 updateExpandedReviews();

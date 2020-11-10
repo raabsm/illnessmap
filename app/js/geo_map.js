@@ -112,7 +112,7 @@
         review_bottom_threshold: sickReviewBottomThreshold,
         review_top_threshold: sickReviewTopThreshold
     };
-    OpenWindowWithPost("/restaurant_info", params);
+    OpenWindowWithPost("/foodbornemap/restaurant_info", params);
     }
 
     function OpenWindowWithPost(url, params)
@@ -271,7 +271,7 @@
     }
 
     function loadDataFromServer() {
-         xhr = $.getJSON("/get_reviews", function(businesses){
+         xhr = $.getJSON("/foodbornemap/get_reviews", function(businesses){
              console.log("started");
              allSickReviews = businesses;
              console.log("ended");
@@ -442,7 +442,7 @@
         marker.setIcon(marker.normal_icon);
     }
     function loadGeoJson() {
-        map.data.loadGeoJson('/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
+        map.data.loadGeoJson('/foodbornemap/static/nyc_zip_code.geojson', {idPropertyName :'postalcode'});
         google.maps.event.addListenerOnce(map.data, 'addfeature', function() {
         //        loadSickData();
             loadDataFromServer();
