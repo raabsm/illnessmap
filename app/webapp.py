@@ -1,13 +1,17 @@
 import tornado.ioloop
 import tornado.web
+from tornado.log import enable_pretty_logging
 import os
 from pymongo import MongoClient
 from bson.json_util import dumps
 import datetime
-
+from motor.motor_tornado import MotorClient
 global data, db
 
+enable_pretty_logging()
 reviews_with_sentence_errors = {}
+client = MotorClient(os.environ['URI'])
+
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -16,50 +20,71 @@ class MainHandler(tornado.web.RequestHandler):
 
 class RestaurantHandler(tornado.web.RequestHandler):
     def post(self):
-        business_id = self.get_argument('business_id')
-        start_time = self.get_argument('start_time')
-        end_time = self.get_argument('end_time')
-        review_bottom_threshold = self.get_argument('review_bottom_threshold')
-        review_top_threshold = self.get_argument('review_top_threshold')
-        self.render('html/restaurant.html',
-                    start_time=start_time,
-                    end_time=end_time,
-                    review_bottom_threshold=review_bottom_threshold,
-                    review_top_threshold=review_top_threshold,
-                    business_id=business_id)
+        try:
+            business_id = self.get_argument('business_id')
+            start_time = self.get_argument('start_time')
+            end_time = self.get_argument('end_time')
+            review_bottom_threshold = self.get_argument('review_bottom_threshold')
+            review_top_threshold = self.get_argument('review_top_threshold')
+            self.render('html/restaurant.html',
+                        start_time=start_time,
+                        end_time=end_time,
+                        review_bottom_threshold=review_bottom_threshold,
+                        review_top_threshold=review_top_threshold,
+                        business_id=business_id)
+        except Exception as e:
+            print("Exception in rendering", e)
+            self.write('Error')
 
 
 class GetRestuarantInfo(tornado.web.RequestHandler):
-    def get(self):
+    async def get(self):
         id = self.get_query_argument('business_id')
-        info = get_rest_info(id)
-        # json_string = dumps(info, ensure_ascii=False).encode('utf8')
-        # print(info)
-        self.write(info)
+        info = await get_rest_info(id)
+        json_string = dumps(info, ensure_ascii=False).encode('utf8')
+
+        if info:
+            try:
+                self.write(json_string)
+            except Exception as e:
+                print("Error writing info", e)
+                self.write("Error")
+        else:
+            self.write("Error")
 
 
 class GetReviews(tornado.web.RequestHandler):
     def get(self):
-        self.write(data)
+        try:
+            print("get received", datetime.datetime.now())
+            self.write(data)
+            print("get returned", datetime.datetime.now())
+        except Exception as e:
+            print("Exception", e)
+            self.write("Error: " + str(e))
 
 
 class UpdateReviews(tornado.web.RequestHandler):
-    def get(self):
-        get_newest_reviews()
+    async def get(self):
+        await get_newest_reviews()
         self.write("Completed")
+
 
 
 class ReviewSentenceError(tornado.web.RequestHandler):
     def post(self):
-        review_id = self.get_argument('review_id')
-        to_insert = {
-            'review_id': review_id,
-            'sentences_split_length': self.get_argument('sentences_split_length'),
-            'sentence_scores_length': self.get_argument('sentence_scores_length')
-        }
-        global reviews_with_sentence_errors
-        if review_id not in reviews_with_sentence_errors:
-            reviews_with_sentence_errors[review_id] = to_insert
+        try:
+            review_id = self.get_argument('review_id')
+            to_insert = {
+                'review_id': review_id,
+                'sentences_split_length': self.get_argument('sentences_split_length'),
+                'sentence_scores_length': self.get_argument('sentence_scores_length')
+            }
+            global reviews_with_sentence_errors
+            if review_id not in reviews_with_sentence_errors:
+                reviews_with_sentence_errors[review_id] = to_insert
+        except Exception as e:
+            print("Error adding faulty sentence", e)
 
 
 class GetReviewsWithSentenceErrors(tornado.web.RequestHandler):
@@ -67,45 +92,65 @@ class GetReviewsWithSentenceErrors(tornado.web.RequestHandler):
         self.write(dumps(reviews_with_sentence_errors))
 
 
-def get_newest_reviews():
+async def get_newest_reviews():
     print("Querying DB...", datetime.datetime.now())
+    db = client[os.environ['DB']]
     try:
-        init_mongo()
         collection = db[os.environ['COLLECTION_NEWEST_MERGED_REVIEWS']]
-        temp = collection.find({})
+        cursor = collection.find({})
+        docs = await cursor.to_list(length=30000)
     except Exception as e:
         print("could not reload data:", e)
-        temp = []
+        docs = []
 
-    global data
-    data = dumps(temp)
-    print("Data updated", datetime.datetime.now())
+        return False
+
+    try:
+        docs = dumps(docs)
+        global data
+        data = docs
+        print("Data updated", datetime.datetime.now())
+
+        return True
+    except Exception as e:
+        print("couldn't update data", e, datetime.datetime.now())
+
+        return False
 
 
 def init_mongo():
-    global db
-    db = MongoClient(os.environ['URI'])[os.environ['DB']]
+    try:
+        client = MotorClient(os.environ['URI'])
+    except Exception as e:
+        print("Error connecting to db", e)
 
 
-def get_rest_info(id):
-    # collection = db[os.environ['COLLECTION_ALL_MERGED_REVIEWS']]
-    collection = db['Restaurants']
-    rest_info = collection.aggregate([
-        {
-            '$match': {
-                '_id': id
+async def get_rest_info(id):
+    db = client[os.environ['DB']]
+    try:
+        collection = db['Restaurants']
+        result = collection.aggregate([
+            {
+                '$match': {
+                    '_id': id
+                },
             },
-        },
-        {
-            '$lookup': {
-                'from': 'AllSickReviews',
-                'localField': '_id',
-                'foreignField': 'business_id',
-                'as': 'reviews'
+            {
+                '$lookup': {
+                    'from': os.environ['COLLECTION_ALL_SICK_REVIEWS'],
+                    'localField': '_id',
+                    'foreignField': 'business_id',
+                    'as': 'reviews'
+                }
             }
-        }
-    ])
-    return list(rest_info)[0]
+        ])
+        x = await result.to_list(length=1)
+        if len(x) > 0:
+            return x[0]
+        return None
+    except Exception as e:
+        print("Exception", e)
+        return None
 
 
 def make_app():
@@ -122,12 +167,12 @@ def make_app():
         (r"/images/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/datafiles/images"}),
         (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/css/"}),
         (r"/js/(.*)", tornado.web.StaticFileHandler, {"path": pwd + "/js/"})
-    ])
+    ], client=client)
 
 
 if __name__ == "__main__":
-    get_newest_reviews()
     app = make_app()
+    tornado.ioloop.IOLoop.current().run_sync(get_newest_reviews)
     app.listen(int(os.environ['WEBAPP_PORT']))
     print('running')
     tornado.ioloop.IOLoop.current().start()

@@ -36,7 +36,7 @@ def update_webapp_data():
     port = os.environ.get('WEBAPP_PORT')
     if port:
         try:
-            requests.get('http://webapp:' + str(port) + '/update_reviews')
+            requests.get('http://webapp:' + str(port) + '/update_data')
             print("updated database dump")
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print("didn't work yet")
