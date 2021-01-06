@@ -2,6 +2,7 @@ import tornado.ioloop
 import tornado.web
 from tornado.log import enable_pretty_logging
 import os
+import json
 from pymongo import MongoClient
 from bson.json_util import dumps
 import datetime
@@ -110,11 +111,27 @@ async def get_newest_reviews():
         global data
         data = docs
         print("Data updated", datetime.datetime.now())
+        try:
+            with open('get_reviews.json', 'w') as f:
+                f.write(data)
+        except IOError as e:
+            print("did't write to file", e)
 
         return True
     except Exception as e:
         print("couldn't update data", e, datetime.datetime.now())
 
+        return False
+
+
+def load_initial_data():
+    try:
+        with open('get_reviews.json', 'r') as f:
+            global data
+            data = f.read()
+            return True
+    except IOError as e:
+        print(e)
         return False
 
 
@@ -128,7 +145,7 @@ def init_mongo():
 async def get_rest_info(id):
     db = client[os.environ['DB']]
     try:
-        collection = db['Restaurants']
+        collection = db['businesses']
         result = collection.aggregate([
             {
                 '$match': {
@@ -172,7 +189,9 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    tornado.ioloop.IOLoop.current().run_sync(get_newest_reviews)
+    if not load_initial_data():
+        tornado.ioloop.IOLoop.current().run_sync(get_newest_reviews)
+
     app.listen(int(os.environ['WEBAPP_PORT']))
     print('running')
     tornado.ioloop.IOLoop.current().start()
